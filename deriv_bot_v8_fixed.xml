@@ -129,7 +129,7 @@
             </value>
           </block>
         </statement>
-        <!-- Loss handling: multiply stake on loss, capped by max_stake. -->
+        <!-- Loss handling: martingale multiply on loss, cap stake to max_stake when exceeded. -->
         <statement name="ELSE">
           <block type="variables_set" id="after_loss_mul">
             <field name="VAR" id="v_stake">stake</field>
