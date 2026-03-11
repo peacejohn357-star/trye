@@ -368,13 +368,13 @@
       <!--   EMA10 > EMA50                                  -->
       <!--   AND tick_2 <= EMA10                            -->
       <!--   AND tick_0 > tick_1 > tick_2                   -->
-      <!--   AND tick_0 > EMA50                             -->
+      <!--   AND tick_0 > EMA10                             -->
       <!--                                                  -->
       <!-- fresh_ema10_down (mirror):                       -->
       <!--   EMA10 < EMA50                                  -->
       <!--   AND tick_2 >= EMA10                            -->
       <!--   AND tick_0 < tick_1 < tick_2                   -->
-      <!--   AND tick_0 < EMA50                             -->
+      <!--   AND tick_0 < EMA10                             -->
       <!-- ================================================ -->
 
       <block type="variables_set" id="set_f10u">
@@ -418,7 +418,7 @@
                 <value name="B">
                   <block type="logic_compare" id="f10u_above"><field name="OP">GT</field>
                     <value name="A"><block type="variables_get" id="f10u_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10u_e50b"><field name="VAR" id="v_ema50">ema_50</field></block></value>
+                    <value name="B"><block type="variables_get" id="f10u_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
                   </block>
                 </value>
               </block>
@@ -469,7 +469,7 @@
                 <value name="B">
                   <block type="logic_compare" id="f10d_below"><field name="OP">LT</field>
                     <value name="A"><block type="variables_get" id="f10d_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10d_e50b"><field name="VAR" id="v_ema50">ema_50</field></block></value>
+                    <value name="B"><block type="variables_get" id="f10d_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
                   </block>
                 </value>
               </block>
