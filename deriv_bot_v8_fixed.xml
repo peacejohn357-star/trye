@@ -3,6 +3,7 @@
   <variables>
     <variable id="v_stake">stake</variable>
     <variable id="v_multiplier">multiplier</variable>
+    <variable id="v_max_stake">max_stake</variable>
     <variable id="v_tick_0">tick_0_now</variable>
     <variable id="v_tick_1">tick_1_ago</variable>
     <variable id="v_tick_2">tick_2_ago</variable>
@@ -68,6 +69,15 @@
             <value name="VALUE">
               <block type="math_number" id="init_mult_val"><field name="NUM">2.1</field></block>
             </value>
+            <next>
+              <!-- Set max_stake = balance * 0.01 (1%) to balance * 0.02 (2%). Example: $1000 balance -> $10 (1%) to $20 (2%). Default 20 is the 2% upper bound for a $1000 balance; you MUST recalculate this and set the NUM below to your balance * 0.01-0.02 before running if your balance differs. -->
+              <block type="variables_set" id="init_max_stake">
+                <field name="VAR" id="v_max_stake">max_stake</field>
+                <value name="VALUE">
+                  <block type="math_number" id="init_max_stake_val"><field name="NUM">20</field></block>
+                </value>
+              </block>
+            </next>
           </block>
         </next>
       </block>
@@ -167,6 +177,36 @@
                 <value name="B"><block type="variables_get" id="after_loss_m"><field name="VAR" id="v_multiplier">multiplier</field></block></value>
               </block>
             </value>
+            <next>
+              <!-- If stake exceeds max_stake, cap it here to keep losses bounded. -->
+              <block type="controls_if" id="cap_stake_if">
+                <value name="IF0">
+                  <block type="logic_compare" id="cap_stake_check">
+                    <field name="OP">GT</field>
+                    <value name="A">
+                      <block type="variables_get" id="cap_stake_val">
+                        <field name="VAR" id="v_stake">stake</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="variables_get" id="cap_max_val">
+                        <field name="VAR" id="v_max_stake">max_stake</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="variables_set" id="cap_stake_set">
+                    <field name="VAR" id="v_stake">stake</field>
+                    <value name="VALUE">
+                      <block type="variables_get" id="cap_max_stake_get">
+                        <field name="VAR" id="v_max_stake">max_stake</field>
+                      </block>
+                    </value>
+                  </block>
+                </statement>
+              </block>
+            </next>
           </block>
         </statement>
         <next>
