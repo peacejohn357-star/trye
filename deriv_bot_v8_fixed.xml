@@ -70,7 +70,7 @@
               <block type="math_number" id="init_mult_val"><field name="NUM">2.1</field></block>
             </value>
             <next>
-              <!-- Set max_stake to 1-2% of balance (balance * 0.01 to balance * 0.02). For a $1000 balance, use $10-$20. Default 20 assumes a $1000 balance; the bot does not compute this automatically, so adjust manually. -->
+              <!-- Set max_stake to 1-2% of balance (balance * 0.01 to balance * 0.02). For a $1000 balance, use $10-$20. Default 20 represents 2% of a $1000 balance; adjust manually since this is not computed automatically. -->
               <block type="variables_set" id="init_max_stake">
                 <field name="VAR" id="v_max_stake">max_stake</field>
                 <value name="VALUE">
@@ -178,7 +178,7 @@
               </block>
             </value>
             <next>
-              <!-- If stake exceeds max_stake, cap it here (wins reset stake to 1 in the win branch). -->
+              <!-- If stake exceeds max_stake, cap it here to keep losses bounded. -->
               <block type="controls_if" id="cap_stake_if">
                 <value name="IF0">
                   <block type="logic_compare" id="cap_stake_check">
