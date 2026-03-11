@@ -38,6 +38,8 @@
                     <next>
                       <block type="trade_definition_restartbuysell" id="td_restart" deletable="false" movable="false">
                         <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <!-- Keep buy/sell loop alive after transient platform errors -->
+                        <field name="RESTART_BUYSELL">TRUE</field>
                         <next>
                           <block type="trade_definition_restartonerror" id="td_error" deletable="false" movable="false">
                             <field name="RESTARTONERROR">TRUE</field>
@@ -188,10 +190,9 @@
   <!--   2-tick momentum confirms direction.        -->
   <!--                                              -->
   <!-- PATH 2: Established trend + EMA10 clearance  -->
-  <!--   SIMPLIFIED: Just needs EMA trend +         -->
-  <!--   last 2 ticks strictly on correct side      -->
-  <!--   of EMA10 + above/below EMA50.              -->
-  <!--   The 2-tick clearance IS the filter.        -->
+  <!--   SIMPLIFIED: EMA trend + current tick on    -->
+  <!--   correct side of EMA10 + above/below EMA50. -->
+  <!--   This avoids requiring 2 consecutive ticks. -->
   <!--                                              -->
   <!-- PATH 3: Fresh EMA10 cross in established     -->
   <!--   trend. 2-tick momentum confirms.           -->
@@ -485,9 +486,9 @@
       <!--   PATH 1: fresh_ema50_up                         -->
       <!--   OR PATH 3: fresh_ema10_up                      -->
       <!--   OR PATH 2: EMA10>EMA50                         -->
-      <!--              AND t0>EMA10 AND t1>EMA10           -->
-      <!--              AND t0>EMA50                         -->
-      <!--              (no pattern requirement!)            -->
+      <!--              AND t0>EMA10                       -->
+      <!--              AND t0>EMA50                       -->
+      <!--              (no pattern requirement!)          -->
       <!--                                                  -->
       <!-- PUT = exact mirror                               -->
       <!-- ================================================ -->
@@ -507,7 +508,7 @@
                   <block type="variables_get" id="call_f10"><field name="VAR" id="v_fresh_ema10_up">fresh_ema10_up</field></block>
                 </value>
                 <value name="B">
-                  <!-- PATH 2: EMA trend + 2-tick EMA10 clearance + EMA50 check -->
+                  <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
                   <block type="logic_operation" id="call_p2"><field name="OP">AND</field>
                     <value name="A">
                       <!-- EMA10 > EMA50 AND t0 > EMA10 -->
@@ -527,20 +528,10 @@
                       </block>
                     </value>
                     <value name="B">
-                      <!-- t1 > EMA10 AND t0 > EMA50 -->
-                      <block type="logic_operation" id="call_p2b"><field name="OP">AND</field>
-                        <value name="A">
-                          <block type="logic_compare" id="call_t1e10"><field name="OP">GT</field>
-                            <value name="A"><block type="variables_get" id="call_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                            <value name="B"><block type="variables_get" id="call_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                          </block>
-                        </value>
-                        <value name="B">
-                          <block type="logic_compare" id="call_t0e50"><field name="OP">GT</field>
-                            <value name="A"><block type="variables_get" id="call_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                            <value name="B"><block type="variables_get" id="call_e50a"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                          </block>
-                        </value>
+                      <!-- t0 > EMA50 -->
+                      <block type="logic_compare" id="call_t0e50"><field name="OP">GT</field>
+                        <value name="A"><block type="variables_get" id="call_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
+                        <value name="B"><block type="variables_get" id="call_e50a"><field name="VAR" id="v_ema50">ema_50</field></block></value>
                       </block>
                     </value>
                   </block>
@@ -565,7 +556,7 @@
                   <block type="variables_get" id="put_f10"><field name="VAR" id="v_fresh_ema10_down">fresh_ema10_down</field></block>
                 </value>
                 <value name="B">
-                  <!-- PATH 2: EMA trend + 2-tick EMA10 clearance + EMA50 check -->
+                  <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
                   <block type="logic_operation" id="put_p2"><field name="OP">AND</field>
                     <value name="A">
                       <!-- EMA10 < EMA50 AND t0 < EMA10 -->
@@ -585,20 +576,10 @@
                       </block>
                     </value>
                     <value name="B">
-                      <!-- t1 < EMA10 AND t0 < EMA50 -->
-                      <block type="logic_operation" id="put_p2b"><field name="OP">AND</field>
-                        <value name="A">
-                          <block type="logic_compare" id="put_t1e10"><field name="OP">LT</field>
-                            <value name="A"><block type="variables_get" id="put_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                            <value name="B"><block type="variables_get" id="put_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                          </block>
-                        </value>
-                        <value name="B">
-                          <block type="logic_compare" id="put_t0e50"><field name="OP">LT</field>
-                            <value name="A"><block type="variables_get" id="put_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                            <value name="B"><block type="variables_get" id="put_e50a"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                          </block>
-                        </value>
+                      <!-- t0 < EMA50 -->
+                      <block type="logic_compare" id="put_t0e50"><field name="OP">LT</field>
+                        <value name="A"><block type="variables_get" id="put_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
+                        <value name="B"><block type="variables_get" id="put_e50a"><field name="VAR" id="v_ema50">ema_50</field></block></value>
                       </block>
                     </value>
                   </block>
