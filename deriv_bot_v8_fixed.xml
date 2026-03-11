@@ -612,7 +612,7 @@
                   <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
                   <block type="logic_operation" id="put_p2"><field name="OP">AND</field>
                     <value name="A">
-                      <!-- EMA10 < EMA50 AND t0 < EMA10 AND t1 < EMA10 -->
+                      <!-- EMA10 < EMA50 AND t0 < EMA10 AND t1 < EMA10 AND t0 < t1 -->
                       <block type="logic_operation" id="put_p2a"><field name="OP">AND</field>
                         <value name="A">
                           <block type="logic_compare" id="put_ema"><field name="OP">LT</field>
@@ -629,9 +629,19 @@
                               </block>
                             </value>
                             <value name="B">
-                              <block type="logic_compare" id="put_t1e10"><field name="OP">LT</field>
-                                <value name="A"><block type="variables_get" id="put_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                                <value name="B"><block type="variables_get" id="put_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                              <block type="logic_operation" id="put_p2c"><field name="OP">AND</field>
+                                <value name="A">
+                                  <block type="logic_compare" id="put_t1e10"><field name="OP">LT</field>
+                                    <value name="A"><block type="variables_get" id="put_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
+                                    <value name="B"><block type="variables_get" id="put_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <block type="logic_compare" id="put_t0t1"><field name="OP">LT</field>
+                                    <value name="A"><block type="variables_get" id="put_t0c"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
+                                    <value name="B"><block type="variables_get" id="put_t1b"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
+                                  </block>
+                                </value>
                               </block>
                             </value>
                           </block>
