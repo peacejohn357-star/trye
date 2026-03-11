@@ -165,10 +165,9 @@
   <!-- ============================================ -->
   <block type="before_purchase" id="before_block" deletable="false" x="0" y="1279">
     <statement name="BEFOREPURCHASE_STACK">
-      <!-- Use BBands middle line (BBRESULT_LIST=1 selects the middle band/SMA) as a fallback for legacy EMA blocks while keeping ema_10/ema_50 names for compatibility. -->
-      <block type="bb_statement" id="bb_ema10_calc">
+      <!-- Calculate EMA10/EMA50 directly using EMA indicator blocks. -->
+      <block type="ema_statement" id="bb_ema10_calc">
         <field name="VARIABLE" id="v_ema10">ema_10</field>
-        <field name="BBRESULT_LIST">1</field>
         <statement name="STATEMENT">
           <block type="input_list" id="ema10_input" deletable="false" movable="false">
             <value name="INPUT_LIST">
@@ -179,29 +178,13 @@
                 <value name="PERIOD">
                   <shadow type="math_number" id="ema10_pval"><field name="NUM">10</field></shadow>
                 </value>
-                <next>
-                  <!-- Standard deviation multipliers set to 0 to suppress bands and read only the middle line (SMA proxy). -->
-                  <block type="std_dev_multiplier_up" id="bb_ema10_up" deletable="false" movable="false">
-                    <value name="UPMULTIPLIER">
-                      <shadow type="math_number" id="bb_ema10_up_val"><field name="NUM">0</field></shadow>
-                    </value>
-                    <next>
-                      <block type="std_dev_multiplier_down" id="bb_ema10_down" deletable="false" movable="false">
-                        <value name="DOWNMULTIPLIER">
-                          <shadow type="math_number" id="bb_ema10_down_val"><field name="NUM">0</field></shadow>
-                        </value>
-                      </block>
-                    </next>
-                  </block>
-                </next>
               </block>
             </next>
           </block>
         </statement>
         <next>
-          <block type="bb_statement" id="bb_ema50_calc">
+          <block type="ema_statement" id="bb_ema50_calc">
             <field name="VARIABLE" id="v_ema50">ema_50</field>
-            <field name="BBRESULT_LIST">1</field>
             <statement name="STATEMENT">
               <block type="input_list" id="ema50_input" deletable="false" movable="false">
                 <value name="INPUT_LIST">
@@ -212,21 +195,6 @@
                     <value name="PERIOD">
                       <shadow type="math_number" id="ema50_pval"><field name="NUM">50</field></shadow>
                     </value>
-                    <next>
-                      <!-- Standard deviation multipliers set to 0 to suppress bands and read only the middle line (SMA proxy). -->
-                      <block type="std_dev_multiplier_up" id="bb_ema50_up" deletable="false" movable="false">
-                        <value name="UPMULTIPLIER">
-                          <shadow type="math_number" id="bb_ema50_up_val"><field name="NUM">0</field></shadow>
-                        </value>
-                        <next>
-                          <block type="std_dev_multiplier_down" id="bb_ema50_down" deletable="false" movable="false">
-                            <value name="DOWNMULTIPLIER">
-                              <shadow type="math_number" id="bb_ema50_down_val"><field name="NUM">0</field></shadow>
-                            </value>
-                          </block>
-                        </next>
-                      </block>
-                    </next>
                   </block>
                 </next>
               </block>
