@@ -197,8 +197,7 @@
   <!--   trend. 2-tick momentum confirms.           -->
   <!--                                              -->
   <!-- STEPS:                                       -->
-  <!--   1. Get last 5 ticks (only need 3 now       -->
-  <!--      but keep 5 for fresh cross checks)      -->
+  <!--   1. Get last 3 ticks (tick_0..tick_2)       -->
   <!--   2. Fresh EMA50 crossover detection         -->
   <!--   3. Fresh EMA10 cross detection             -->
   <!--   4. Purchase decision (3 paths)             -->
@@ -612,6 +611,7 @@
           <block type="purchase" id="buy_put"><field name="PURCHASE_LIST">PUT</field></block>
         </statement>
         <statement name="ELSE">
+          <!-- No signal: restart evaluation so the bot doesn't stall -->
           <block type="trade_again" id="no_signal_again"></block>
         </statement>
       </block>
