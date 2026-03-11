@@ -128,6 +128,7 @@
             </value>
           </block>
         </statement>
+        <!-- Loss handling removed to avoid stalling (loss branch blocked trade_again); this intentionally disables the prior martingale + cap so stake stays flat on loss. -->
         <next>
           <block type="trade_again" id="after_again"></block>
         </next>
@@ -151,7 +152,7 @@
   <!-- PATH 2: Established trend + EMA10 clearance  -->
   <!--   EMA trend + current AND prior tick on      -->
   <!--   correct side of EMA10 + above/below EMA50. -->
-  <!--   Adds 2-tick momentum confirmation.         -->
+  <!--   Updated to require 2-tick momentum confirmation. -->
   <!--                                              -->
   <!-- PATH 3: Fresh EMA10 cross in established     -->
   <!--   trend. 2-tick momentum confirms.           -->
@@ -164,7 +165,8 @@
   <!-- ============================================ -->
   <block type="before_purchase" id="before_block" deletable="false" x="0" y="1279">
     <statement name="BEFOREPURCHASE_STACK">
-      <block type="bb_statement" id="ema10_calc">
+      <!-- Use BBands middle line (BBRESULT_LIST=1 selects the middle band/SMA) as a fallback for legacy EMA blocks while keeping ema_10/ema_50 names for compatibility. -->
+      <block type="bb_statement" id="bb_ema10_calc">
         <field name="VARIABLE" id="v_ema10">ema_10</field>
         <field name="BBRESULT_LIST">1</field>
         <statement name="STATEMENT">
@@ -178,14 +180,15 @@
                   <shadow type="math_number" id="ema10_pval"><field name="NUM">10</field></shadow>
                 </value>
                 <next>
-                  <block type="std_dev_multiplier_up" id="ema10_up" deletable="false" movable="false">
+                  <!-- Standard deviation multipliers set to 0 to suppress bands and read only the middle line (SMA proxy). -->
+                  <block type="std_dev_multiplier_up" id="bb_ema10_up" deletable="false" movable="false">
                     <value name="UPMULTIPLIER">
-                      <shadow type="math_number" id="ema10_up_val"><field name="NUM">2</field></shadow>
+                      <shadow type="math_number" id="bb_ema10_up_val"><field name="NUM">0</field></shadow>
                     </value>
                     <next>
-                      <block type="std_dev_multiplier_down" id="ema10_down" deletable="false" movable="false">
+                      <block type="std_dev_multiplier_down" id="bb_ema10_down" deletable="false" movable="false">
                         <value name="DOWNMULTIPLIER">
-                          <shadow type="math_number" id="ema10_down_val"><field name="NUM">2</field></shadow>
+                          <shadow type="math_number" id="bb_ema10_down_val"><field name="NUM">0</field></shadow>
                         </value>
                       </block>
                     </next>
@@ -196,7 +199,7 @@
           </block>
         </statement>
         <next>
-          <block type="bb_statement" id="ema50_calc">
+          <block type="bb_statement" id="bb_ema50_calc">
             <field name="VARIABLE" id="v_ema50">ema_50</field>
             <field name="BBRESULT_LIST">1</field>
             <statement name="STATEMENT">
@@ -210,14 +213,15 @@
                       <shadow type="math_number" id="ema50_pval"><field name="NUM">50</field></shadow>
                     </value>
                     <next>
-                      <block type="std_dev_multiplier_up" id="ema50_up" deletable="false" movable="false">
+                      <!-- Standard deviation multipliers set to 0 to suppress bands and read only the middle line (SMA proxy). -->
+                      <block type="std_dev_multiplier_up" id="bb_ema50_up" deletable="false" movable="false">
                         <value name="UPMULTIPLIER">
-                          <shadow type="math_number" id="ema50_up_val"><field name="NUM">2</field></shadow>
+                          <shadow type="math_number" id="bb_ema50_up_val"><field name="NUM">0</field></shadow>
                         </value>
                         <next>
-                          <block type="std_dev_multiplier_down" id="ema50_down" deletable="false" movable="false">
+                          <block type="std_dev_multiplier_down" id="bb_ema50_down" deletable="false" movable="false">
                             <value name="DOWNMULTIPLIER">
-                              <shadow type="math_number" id="ema50_down_val"><field name="NUM">2</field></shadow>
+                              <shadow type="math_number" id="bb_ema50_down_val"><field name="NUM">0</field></shadow>
                             </value>
                           </block>
                         </next>
@@ -510,7 +514,7 @@
       <!--   OR PATH 3: fresh_ema10_up                      -->
       <!--   OR PATH 2: EMA10>EMA50                         -->
       <!--              AND t0>EMA10 AND t1>EMA10           -->
-      <!--              AND t0>t1>t2 AND t0>EMA50           -->
+      <!--              AND t0>t1 AND t1>t2 AND t0>EMA50    -->
       <!--                                                  -->
       <!-- PUT = exact mirror                               -->
       <!-- ================================================ -->
@@ -558,6 +562,7 @@
                                   </block>
                                 </value>
                                 <value name="B">
+                                  <!-- 2-tick momentum confirmation -->
                                   <block type="logic_operation" id="call_p2d"><field name="OP">AND</field>
                                     <value name="A">
                                       <block type="logic_compare" id="call_t0t1"><field name="OP">GT</field>
@@ -595,9 +600,16 @@
         <statement name="DO0">
           <block type="controls_if" id="call_position_guard">
             <value name="IF0">
-              <block type="logic_negate" id="call_no_position">
-                <value name="BOOL">
-                  <block type="check_sell" id="call_check_sell"></block>
+              <block type="logic_operation" id="call_position_check"><field name="OP">AND</field>
+                <value name="A">
+                  <block type="logic_negate" id="call_not_selling">
+                    <value name="BOOL">
+                      <block type="check_sell" id="call_check_sell"></block>
+                    </value>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="not_has_open_contract" id="call_no_open_contract"></block>
                 </value>
               </block>
             </value>
@@ -622,7 +634,7 @@
                   <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
                   <block type="logic_operation" id="put_p2"><field name="OP">AND</field>
                     <value name="A">
-                      <!-- EMA10 < EMA50 AND t0 < EMA10 AND t1 < EMA10 AND t0 < t1 < t2 -->
+                      <!-- EMA10 < EMA50 AND t0 < EMA10 AND t1 < EMA10 AND t0 < t1 AND t1 < t2 -->
                       <block type="logic_operation" id="put_p2a"><field name="OP">AND</field>
                         <value name="A">
                           <block type="logic_compare" id="put_ema"><field name="OP">LT</field>
@@ -647,6 +659,7 @@
                                   </block>
                                 </value>
                                 <value name="B">
+                                  <!-- 2-tick momentum confirmation -->
                                   <block type="logic_operation" id="put_p2d"><field name="OP">AND</field>
                                     <value name="A">
                                       <block type="logic_compare" id="put_t0t1"><field name="OP">LT</field>
@@ -684,9 +697,16 @@
         <statement name="DO1">
           <block type="controls_if" id="put_position_guard">
             <value name="IF0">
-              <block type="logic_negate" id="put_no_position">
-                <value name="BOOL">
-                  <block type="check_sell" id="put_check_sell"></block>
+              <block type="logic_operation" id="put_position_check"><field name="OP">AND</field>
+                <value name="A">
+                  <block type="logic_negate" id="put_not_selling">
+                    <value name="BOOL">
+                      <block type="check_sell" id="put_check_sell"></block>
+                    </value>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="not_has_open_contract" id="put_no_open_contract"></block>
                 </value>
               </block>
             </value>
@@ -705,8 +725,8 @@
         </next></block><!-- end set_t2 -->
         </next></block><!-- end set_t1 -->
         </next></block><!-- end set_t0 -->
-        </next></block><!-- end ema50_calc -->
-      </next></block><!-- end ema10_calc -->
+        </next></block><!-- end bb_ema50_calc -->
+      </next></block><!-- end bb_ema10_calc -->
 
     </statement>
   </block>
