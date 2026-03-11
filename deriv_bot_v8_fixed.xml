@@ -117,6 +117,7 @@
   <block type="after_purchase" id="after_block" x="1624" y="292">
     <statement name="AFTERPURCHASE_STACK">
       <block type="controls_if" id="after_if">
+        <mutation else="1"></mutation>
         <value name="IF0">
           <block type="contract_check_result" id="after_win_check"><field name="CHECK_RESULT">win</field></block>
         </value>
@@ -128,7 +129,41 @@
             </value>
           </block>
         </statement>
-        <!-- Loss handling removed to avoid stalling (loss branch blocked trade_again); this intentionally disables the prior martingale + cap so stake stays flat on loss. -->
+        <!-- Loss handling: martingale multiply on loss, cap stake to max_stake when exceeded. -->
+        <statement name="ELSE">
+          <block type="variables_set" id="after_loss_mul">
+            <field name="VAR" id="v_stake">stake</field>
+            <value name="VALUE">
+              <block type="math_arithmetic" id="after_loss_mult">
+                <field name="OP">MULTIPLY</field>
+                <value name="A">
+                  <block type="variables_get" id="after_loss_stake"><field name="VAR" id="v_stake">stake</field></block>
+                </value>
+                <value name="B">
+                  <block type="variables_get" id="after_loss_multiplier"><field name="VAR" id="v_multiplier">multiplier</field></block>
+                </value>
+              </block>
+            </value>
+            <next>
+              <block type="controls_if" id="after_loss_cap_if">
+                <value name="IF0">
+                  <block type="logic_compare" id="after_loss_cap_check"><field name="OP">GT</field>
+                    <value name="A"><block type="variables_get" id="after_loss_cap_stake"><field name="VAR" id="v_stake">stake</field></block></value>
+                    <value name="B"><block type="variables_get" id="after_loss_cap_max"><field name="VAR" id="v_max_stake">max_stake</field></block></value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="variables_set" id="after_loss_cap_set">
+                    <field name="VAR" id="v_stake">stake</field>
+                    <value name="VALUE">
+                      <block type="variables_get" id="after_loss_cap_val"><field name="VAR" id="v_max_stake">max_stake</field></block>
+                    </value>
+                  </block>
+                </statement>
+              </block>
+            </next>
+          </block>
+        </statement>
         <next>
           <block type="trade_again" id="after_again"></block>
         </next>
