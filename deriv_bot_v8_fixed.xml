@@ -84,54 +84,16 @@
     </statement>
 
     <statement name="SUBMARKET">
-      <block type="ema_statement" id="ema10_calc">
-        <field name="VARIABLE" id="v_ema10">ema_10</field>
-        <statement name="STATEMENT">
-          <block type="input_list" id="ema10_input" deletable="false" movable="false">
-            <value name="INPUT_LIST">
-              <block type="ticks" id="ema10_ticks" deletable="false" movable="false"></block>
-            </value>
-            <next>
-              <block type="period" id="ema10_period" deletable="false" movable="false">
-                <value name="PERIOD">
-                  <shadow type="math_number" id="ema10_pval"><field name="NUM">10</field></shadow>
-                </value>
-              </block>
-            </next>
-          </block>
-        </statement>
-        <next>
-          <block type="ema_statement" id="ema50_calc">
-            <field name="VARIABLE" id="v_ema50">ema_50</field>
-            <statement name="STATEMENT">
-              <block type="input_list" id="ema50_input" deletable="false" movable="false">
-                <value name="INPUT_LIST">
-                  <block type="ticks" id="ema50_ticks" deletable="false" movable="false"></block>
-                </value>
-                <next>
-                  <block type="period" id="ema50_period" deletable="false" movable="false">
-                    <value name="PERIOD">
-                      <shadow type="math_number" id="ema50_pval"><field name="NUM">50</field></shadow>
-                    </value>
-                  </block>
-                </next>
-              </block>
-            </statement>
-            <next>
-              <block type="trade_definition_tradeoptions" id="trade_opts">
-                <mutation has_first_barrier="false" has_second_barrier="false" has_prediction="false"></mutation>
-                <field name="DURATIONTYPE_LIST">t</field>
-                <field name="CURRENCY_LIST">USD</field>
-                <value name="DURATION">
-                  <shadow type="math_number_positive" id="dur_val"><field name="NUM">5</field></shadow>
-                </value>
-                <value name="AMOUNT">
-                  <block type="variables_get" id="amt_stake"><field name="VAR" id="v_stake">stake</field></block>
-                </value>
-              </block>
-            </next>
-          </block>
-        </next>
+      <block type="trade_definition_tradeoptions" id="trade_opts">
+        <mutation has_first_barrier="false" has_second_barrier="false" has_prediction="false"></mutation>
+        <field name="DURATIONTYPE_LIST">t</field>
+        <field name="CURRENCY_LIST">USD</field>
+        <value name="DURATION">
+          <shadow type="math_number_positive" id="dur_val"><field name="NUM">5</field></shadow>
+        </value>
+        <value name="AMOUNT">
+          <block type="variables_get" id="amt_stake"><field name="VAR" id="v_stake">stake</field></block>
+        </value>
       </block>
     </statement>
   </block>
@@ -245,6 +207,40 @@
   <!-- ============================================ -->
   <block type="before_purchase" id="before_block" deletable="false" x="0" y="1279">
     <statement name="BEFOREPURCHASE_STACK">
+      <block type="ema_statement" id="ema10_calc">
+        <field name="VARIABLE" id="v_ema10">ema_10</field>
+        <statement name="STATEMENT">
+          <block type="input_list" id="ema10_input" deletable="false" movable="false">
+            <value name="INPUT_LIST">
+              <block type="ticks" id="ema10_ticks" deletable="false" movable="false"></block>
+            </value>
+            <next>
+              <block type="period" id="ema10_period" deletable="false" movable="false">
+                <value name="PERIOD">
+                  <shadow type="math_number" id="ema10_pval"><field name="NUM">10</field></shadow>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="ema_statement" id="ema50_calc">
+            <field name="VARIABLE" id="v_ema50">ema_50</field>
+            <statement name="STATEMENT">
+              <block type="input_list" id="ema50_input" deletable="false" movable="false">
+                <value name="INPUT_LIST">
+                  <block type="ticks" id="ema50_ticks" deletable="false" movable="false"></block>
+                </value>
+                <next>
+                  <block type="period" id="ema50_period" deletable="false" movable="false">
+                    <value name="PERIOD">
+                      <shadow type="math_number" id="ema50_pval"><field name="NUM">50</field></shadow>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
 
       <!-- ======== STEP 1: Get ticks ======== -->
 
@@ -645,6 +641,8 @@
         </next></block><!-- end set_t2 -->
         </next></block><!-- end set_t1 -->
         </next></block><!-- end set_t0 -->
+        </next></block><!-- end ema50_calc -->
+      </next></block><!-- end ema10_calc -->
 
     </statement>
   </block>
