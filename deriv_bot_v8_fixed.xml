@@ -568,16 +568,9 @@
         <statement name="DO0">
           <block type="controls_if" id="call_position_guard">
             <value name="IF0">
-              <block type="logic_operation" id="call_position_check"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_negate" id="call_not_selling">
-                    <value name="BOOL">
-                      <block type="check_sell" id="call_check_sell"></block>
-                    </value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="not_has_open_contract" id="call_no_open_contract"></block>
+              <block type="logic_negate" id="call_not_selling">
+                <value name="BOOL">
+                  <block type="check_sell" id="call_check_sell"></block>
                 </value>
               </block>
             </value>
@@ -665,16 +658,9 @@
         <statement name="DO1">
           <block type="controls_if" id="put_position_guard">
             <value name="IF0">
-              <block type="logic_operation" id="put_position_check"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_negate" id="put_not_selling">
-                    <value name="BOOL">
-                      <block type="check_sell" id="put_check_sell"></block>
-                    </value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="not_has_open_contract" id="put_no_open_contract"></block>
+              <block type="logic_negate" id="put_not_selling">
+                <value name="BOOL">
+                  <block type="check_sell" id="put_check_sell"></block>
                 </value>
               </block>
             </value>
