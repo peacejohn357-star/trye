@@ -70,7 +70,7 @@
               <block type="math_number" id="init_mult_val"><field name="NUM">2.1</field></block>
             </value>
             <next>
-              <!-- Set max_stake based on balance (e.g., 1-2% of balance; for a $1000 balance, use $10-$20). Default of 20 corresponds to 2% of a $1000 balance; set this manually for your balance. -->
+              <!-- Set max_stake as balance * 0.01 to balance * 0.02 (e.g., for a $1000 balance, use $10-$20). Default 20 represents $20 (2% of a $1000 balance); set this manually for your balance. -->
               <block type="variables_set" id="init_max_stake">
                 <field name="VAR" id="v_max_stake">max_stake</field>
                 <value name="VALUE">
