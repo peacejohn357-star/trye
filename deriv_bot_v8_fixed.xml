@@ -632,7 +632,14 @@
           </block>
         </value>
         <statement name="DO1">
-          <block type="purchase" id="buy_put"><field name="PURCHASE_LIST">PUT</field></block>
+          <block type="controls_if" id="put_position_guard">
+            <value name="IF0">
+              <block type="not_has_open_contract" id="put_no_open_contract"></block>
+            </value>
+            <statement name="DO0">
+              <block type="purchase" id="buy_put"><field name="PURCHASE_LIST">PUT</field></block>
+            </statement>
+          </block>
         </statement>
         <statement name="ELSE">
           <!-- No signal: restart evaluation so the bot doesn't stall -->
