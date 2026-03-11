@@ -38,6 +38,7 @@
                     <next>
                       <block type="trade_definition_restartbuysell" id="td_restart" deletable="false" movable="false">
                         <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <!-- Keep buy/sell loop alive after transient platform errors -->
                         <field name="RESTART_BUYSELL">TRUE</field>
                         <next>
                           <block type="trade_definition_restartonerror" id="td_error" deletable="false" movable="false">
