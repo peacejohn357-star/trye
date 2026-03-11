@@ -192,9 +192,9 @@
   <!--   2-tick momentum confirms direction.        -->
   <!--                                              -->
   <!-- PATH 2: Established trend + EMA10 clearance  -->
-  <!--   SIMPLIFIED: EMA trend + current tick on    -->
+  <!--   EMA trend + current AND prior tick on      -->
   <!--   correct side of EMA10 + above/below EMA50. -->
-  <!--   This avoids requiring 2 consecutive ticks. -->
+  <!--   This still avoids requiring 2-tick slope.  -->
   <!--                                              -->
   <!-- PATH 3: Fresh EMA10 cross in established     -->
   <!--   trend. 2-tick momentum confirms.           -->
@@ -522,9 +522,9 @@
       <!--   PATH 1: fresh_ema50_up                         -->
       <!--   OR PATH 3: fresh_ema10_up                      -->
       <!--   OR PATH 2: EMA10>EMA50                         -->
-      <!--              AND t0>EMA10                       -->
+      <!--              AND t0>EMA10 AND t1>EMA10           -->
       <!--              AND t0>EMA50                       -->
-      <!--              (no pattern requirement!)          -->
+      <!--              (no 2-tick slope requirement!)     -->
       <!--                                                  -->
       <!-- PUT = exact mirror                               -->
       <!-- ================================================ -->
@@ -547,7 +547,7 @@
                   <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
                   <block type="logic_operation" id="call_p2"><field name="OP">AND</field>
                     <value name="A">
-                      <!-- EMA10 > EMA50 AND t0 > EMA10 -->
+                      <!-- EMA10 > EMA50 AND t0 > EMA10 AND t1 > EMA10 -->
                       <block type="logic_operation" id="call_p2a"><field name="OP">AND</field>
                         <value name="A">
                           <block type="logic_compare" id="call_ema"><field name="OP">GT</field>
@@ -556,9 +556,19 @@
                           </block>
                         </value>
                         <value name="B">
-                          <block type="logic_compare" id="call_t0e10"><field name="OP">GT</field>
-                            <value name="A"><block type="variables_get" id="call_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                            <value name="B"><block type="variables_get" id="call_e10a"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                          <block type="logic_operation" id="call_p2b"><field name="OP">AND</field>
+                            <value name="A">
+                              <block type="logic_compare" id="call_t0e10"><field name="OP">GT</field>
+                                <value name="A"><block type="variables_get" id="call_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
+                                <value name="B"><block type="variables_get" id="call_e10a"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="logic_compare" id="call_t1e10"><field name="OP">GT</field>
+                                <value name="A"><block type="variables_get" id="call_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
+                                <value name="B"><block type="variables_get" id="call_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                              </block>
+                            </value>
                           </block>
                         </value>
                       </block>
@@ -602,7 +612,7 @@
                   <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
                   <block type="logic_operation" id="put_p2"><field name="OP">AND</field>
                     <value name="A">
-                      <!-- EMA10 < EMA50 AND t0 < EMA10 -->
+                      <!-- EMA10 < EMA50 AND t0 < EMA10 AND t1 < EMA10 -->
                       <block type="logic_operation" id="put_p2a"><field name="OP">AND</field>
                         <value name="A">
                           <block type="logic_compare" id="put_ema"><field name="OP">LT</field>
@@ -611,9 +621,19 @@
                           </block>
                         </value>
                         <value name="B">
-                          <block type="logic_compare" id="put_t0e10"><field name="OP">LT</field>
-                            <value name="A"><block type="variables_get" id="put_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                            <value name="B"><block type="variables_get" id="put_e10a"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                          <block type="logic_operation" id="put_p2b"><field name="OP">AND</field>
+                            <value name="A">
+                              <block type="logic_compare" id="put_t0e10"><field name="OP">LT</field>
+                                <value name="A"><block type="variables_get" id="put_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
+                                <value name="B"><block type="variables_get" id="put_e10a"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="logic_compare" id="put_t1e10"><field name="OP">LT</field>
+                                <value name="A"><block type="variables_get" id="put_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
+                                <value name="B"><block type="variables_get" id="put_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
+                              </block>
+                            </value>
                           </block>
                         </value>
                       </block>
