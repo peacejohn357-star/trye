@@ -191,6 +191,7 @@
           <block type="bb_statement" id="set_bb_upper">
             <field name="VARIABLE" id="v_bb_upper">upper_band</field>
             <field name="BBRESULT_LIST">1</field>
+            <field name="MA_TYPE_LIST">EMA</field>
             <statement name="STATEMENT">
               <block type="input_list" id="bb_upper_input" deletable="false" movable="false">
                 <value name="INPUT_LIST">
@@ -223,6 +224,7 @@
               <block type="bb_statement" id="set_bb_middle">
                 <field name="VARIABLE" id="v_bb_middle">middle_band</field>
                 <field name="BBRESULT_LIST">0</field>
+                <field name="MA_TYPE_LIST">EMA</field>
                 <statement name="STATEMENT">
                   <block type="input_list" id="bb_middle_input" deletable="false" movable="false">
                     <value name="INPUT_LIST">
@@ -255,6 +257,7 @@
                   <block type="bb_statement" id="set_bb_lower">
                     <field name="VARIABLE" id="v_bb_lower">lower_band</field>
                     <field name="BBRESULT_LIST">2</field>
+                    <field name="MA_TYPE_LIST">EMA</field>
                     <statement name="STATEMENT">
                       <block type="input_list" id="bb_lower_input" deletable="false" movable="false">
                         <value name="INPUT_LIST">
