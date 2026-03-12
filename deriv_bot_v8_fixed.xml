@@ -1,20 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
   <variables>
-    <variable id="v_stake">stake</variable>
-    <variable id="v_multiplier">multiplier</variable>
-    <variable id="v_max_stake">max_stake</variable>
-    <variable id="v_tick_0">tick_0_now</variable>
-    <variable id="v_tick_1">tick_1_ago</variable>
-    <variable id="v_tick_2">tick_2_ago</variable>
-    <variable id="v_tick_3">tick_3_ago</variable>
-    <variable id="v_tick_4">tick_4_ago</variable>
-    <variable id="v_ema10">ema_10</variable>
-    <variable id="v_ema50">ema_50</variable>
-    <variable id="v_fresh_ema50_up">fresh_ema50_up</variable>
-    <variable id="v_fresh_ema50_down">fresh_ema50_down</variable>
-    <variable id="v_fresh_ema10_up">fresh_ema10_up</variable>
-    <variable id="v_fresh_ema10_down">fresh_ema10_down</variable>
+    <variable id="v_base_stake">base_stake</variable>
+    <variable id="v_current_stake">current_stake</variable>
+    <variable id="v_multiplier">martingale_multiplier</variable>
+    <variable id="v_tick_counter">tick_counter</variable>
+    <variable id="v_rsi">rsi_value</variable>
   </variables>
 
   <!-- ============================================ -->
@@ -25,7 +16,7 @@
       <block type="trade_definition_market" id="td_market" deletable="false" movable="false">
         <field name="MARKET_LIST">synthetic_index</field>
         <field name="SUBMARKET_LIST">step_index</field>
-        <field name="SYMBOL_LIST">stpRNG</field>
+        <field name="SYMBOL_LIST">STP100</field>
         <next>
           <block type="trade_definition_tradetype" id="td_tradetype" deletable="false" movable="false">
             <field name="TRADETYPECAT_LIST">callput</field>
@@ -58,24 +49,33 @@
     </statement>
 
     <statement name="INITIALIZATION">
-      <block type="variables_set" id="init_stake">
-        <field name="VAR" id="v_stake">stake</field>
+      <block type="variables_set" id="init_base_stake">
+        <field name="VAR" id="v_base_stake">base_stake</field>
         <value name="VALUE">
-          <block type="math_number" id="init_stake_val"><field name="NUM">1</field></block>
+          <block type="math_number" id="init_base_stake_val"><field name="NUM">1</field></block>
         </value>
         <next>
-          <block type="variables_set" id="init_mult">
-            <field name="VAR" id="v_multiplier">multiplier</field>
+          <block type="variables_set" id="init_current_stake">
+            <field name="VAR" id="v_current_stake">current_stake</field>
             <value name="VALUE">
-              <block type="math_number" id="init_mult_val"><field name="NUM">2.1</field></block>
+              <block type="variables_get" id="init_current_from_base">
+                <field name="VAR" id="v_base_stake">base_stake</field>
+              </block>
             </value>
             <next>
-              <!-- Set max_stake = balance * 0.01 (1%) to balance * 0.02 (2%). Example: $1000 balance -> $10 (1%) to $20 (2%). Default 20 is the 2% upper bound for a $1000 balance; you MUST recalculate this and set the NUM below to your balance * 0.01-0.02 before running if your balance differs. -->
-              <block type="variables_set" id="init_max_stake">
-                <field name="VAR" id="v_max_stake">max_stake</field>
+              <block type="variables_set" id="init_mult">
+                <field name="VAR" id="v_multiplier">martingale_multiplier</field>
                 <value name="VALUE">
-                  <block type="math_number" id="init_max_stake_val"><field name="NUM">20</field></block>
+                  <block type="math_number" id="init_mult_val"><field name="NUM">2.1</field></block>
                 </value>
+                <next>
+                  <block type="variables_set" id="init_tick_counter">
+                    <field name="VAR" id="v_tick_counter">tick_counter</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="init_tick_counter_val"><field name="NUM">0</field></block>
+                    </value>
+                  </block>
+                </next>
               </block>
             </next>
           </block>
@@ -92,7 +92,7 @@
           <shadow type="math_number_positive" id="dur_val"><field name="NUM">5</field></shadow>
         </value>
         <value name="AMOUNT">
-          <block type="variables_get" id="amt_stake"><field name="VAR" id="v_stake">stake</field></block>
+          <block type="variables_get" id="amt_stake"><field name="VAR" id="v_current_stake">current_stake</field></block>
         </value>
       </block>
     </statement>
@@ -123,606 +123,149 @@
         </value>
         <statement name="DO0">
           <block type="variables_set" id="after_win_reset">
-            <field name="VAR" id="v_stake">stake</field>
+            <field name="VAR" id="v_current_stake">current_stake</field>
             <value name="VALUE">
-              <block type="math_number" id="after_win_1"><field name="NUM">1</field></block>
+              <block type="variables_get" id="after_win_base"><field name="VAR" id="v_base_stake">base_stake</field></block>
             </value>
           </block>
         </statement>
-        <!-- Loss handling: martingale multiply on loss, cap stake to max_stake when exceeded. -->
         <statement name="ELSE">
           <block type="variables_set" id="after_loss_mul">
-            <field name="VAR" id="v_stake">stake</field>
+            <field name="VAR" id="v_current_stake">current_stake</field>
             <value name="VALUE">
               <block type="math_arithmetic" id="after_loss_mult">
                 <field name="OP">MULTIPLY</field>
                 <value name="A">
-                  <block type="variables_get" id="after_loss_stake"><field name="VAR" id="v_stake">stake</field></block>
+                  <block type="variables_get" id="after_loss_stake"><field name="VAR" id="v_current_stake">current_stake</field></block>
                 </value>
                 <value name="B">
-                  <block type="variables_get" id="after_loss_multiplier"><field name="VAR" id="v_multiplier">multiplier</field></block>
+                  <block type="variables_get" id="after_loss_multiplier"><field name="VAR" id="v_multiplier">martingale_multiplier</field></block>
                 </value>
               </block>
             </value>
-            <next>
-              <block type="controls_if" id="after_loss_cap_if">
-                <value name="IF0">
-                  <block type="logic_compare" id="after_loss_cap_check"><field name="OP">GT</field>
-                    <value name="A"><block type="variables_get" id="after_loss_cap_stake"><field name="VAR" id="v_stake">stake</field></block></value>
-                    <value name="B"><block type="variables_get" id="after_loss_cap_max"><field name="VAR" id="v_max_stake">max_stake</field></block></value>
-                  </block>
-                </value>
-                <statement name="DO0">
-                  <block type="variables_set" id="after_loss_cap_set">
-                    <field name="VAR" id="v_stake">stake</field>
-                    <value name="VALUE">
-                      <block type="variables_get" id="after_loss_cap_val"><field name="VAR" id="v_max_stake">max_stake</field></block>
-                    </value>
-                  </block>
-                </statement>
-              </block>
-            </next>
           </block>
         </statement>
         <next>
-          <block type="trade_again" id="after_again"></block>
+          <block type="variables_set" id="after_set_cooldown">
+            <field name="VAR" id="v_tick_counter">tick_counter</field>
+            <value name="VALUE">
+              <block type="math_number" id="after_cooldown_val"><field name="NUM">3</field></block>
+            </value>
+            <next>
+              <block type="trade_again" id="after_again"></block>
+            </next>
+          </block>
         </next>
       </block>
     </statement>
   </block>
 
   <!-- ============================================ -->
-  <!-- BEFORE PURCHASE (v8-fixed)                   -->
-  <!--                                              -->
-  <!-- SIMPLIFIED: Removed up_count, down_count,    -->
-  <!-- has_higher_highs, has_lower_lows variables.  -->
-  <!-- They were over-filtering PATH 2.             -->
-  <!--                                              -->
-  <!-- 3 ENTRY PATHS:                               -->
-  <!--                                              -->
-  <!-- PATH 1: Fresh EMA50 crossover                -->
-  <!--   Price just punched through EMA50.          -->
-  <!--   2-tick momentum confirms direction.        -->
-  <!--                                              -->
-  <!-- PATH 2: Established trend + EMA10 clearance  -->
-  <!--   EMA trend + current AND prior tick on      -->
-  <!--   correct side of EMA10 + above/below EMA50. -->
-  <!--   Updated to require 2-tick momentum confirmation. -->
-  <!--                                              -->
-  <!-- PATH 3: Fresh EMA10 cross in established     -->
-  <!--   trend. 2-tick momentum confirms.           -->
-  <!--                                              -->
-  <!-- STEPS:                                       -->
-  <!--   1. Get last 3 ticks (tick_0..tick_2)       -->
-  <!--   2. Fresh EMA50 crossover detection         -->
-  <!--   3. Fresh EMA10 cross detection             -->
-  <!--   4. Purchase decision (3 paths)             -->
+  <!-- BEFORE PURCHASE (RSI + COOLDOWN)             -->
   <!-- ============================================ -->
   <block type="before_purchase" id="before_block" deletable="false" x="0" y="1279">
     <statement name="BEFOREPURCHASE_STACK">
-      <!-- Calculate EMA10/EMA50 using v10-compatible bbands value blocks. -->
-      <block type="variables_set" id="set_ema10">
-        <field name="VAR" id="v_ema10">ema_10</field>
-        <value name="VALUE">
-          <block type="bbands" id="bb_ema10_calc">
-            <field name="BBRESULT_LIST">0</field>
-            <value name="INPUT_LIST">
-              <block type="ticks" id="ema10_ticks" deletable="false" movable="false"></block>
-            </value>
-            <value name="PERIOD">
-              <shadow type="math_number" id="ema10_pval"><field name="NUM">10</field></shadow>
-            </value>
-            <value name="UPMULTIPLIER">
-              <shadow type="math_number" id="ema10_up"><field name="NUM">2</field></shadow>
-            </value>
-            <value name="DOWNMULTIPLIER">
-              <shadow type="math_number" id="ema10_down"><field name="NUM">2</field></shadow>
-            </value>
-          </block>
-        </value>
-        <next>
-          <block type="variables_set" id="set_ema50">
-            <field name="VAR" id="v_ema50">ema_50</field>
-            <value name="VALUE">
-              <block type="bbands" id="bb_ema50_calc">
-                <field name="BBRESULT_LIST">0</field>
-                <value name="INPUT_LIST">
-                  <block type="ticks" id="ema50_ticks" deletable="false" movable="false"></block>
-                </value>
-                <value name="PERIOD">
-                  <shadow type="math_number" id="ema50_pval"><field name="NUM">50</field></shadow>
-                </value>
-                <value name="UPMULTIPLIER">
-                  <shadow type="math_number" id="ema50_up"><field name="NUM">2</field></shadow>
-                </value>
-                <value name="DOWNMULTIPLIER">
-                  <shadow type="math_number" id="ema50_down"><field name="NUM">2</field></shadow>
-                </value>
-              </block>
-            </value>
-            <next>
-
-      <!-- ======== STEP 1: Get ticks ======== -->
-
-      <block type="variables_set" id="set_t0">
-        <field name="VAR" id="v_tick_0">tick_0_now</field>
-        <value name="VALUE">
-          <block type="lists_getIndex" id="get_t0">
-            <mutation statement="false" at="true"></mutation>
-            <field name="MODE">GET</field>
-            <field name="WHERE">FROM_END</field>
-            <value name="VALUE"><block type="ticks" id="ticks_t0"></block></value>
-            <value name="AT"><block type="math_number" id="at_t0"><field name="NUM">1</field></block></value>
-          </block>
-        </value>
-        <next>
-      <block type="variables_set" id="set_t1">
-        <field name="VAR" id="v_tick_1">tick_1_ago</field>
-        <value name="VALUE">
-          <block type="lists_getIndex" id="get_t1">
-            <mutation statement="false" at="true"></mutation>
-            <field name="MODE">GET</field>
-            <field name="WHERE">FROM_END</field>
-            <value name="VALUE"><block type="ticks" id="ticks_t1"></block></value>
-            <value name="AT"><block type="math_number" id="at_t1"><field name="NUM">2</field></block></value>
-          </block>
-        </value>
-        <next>
-      <block type="variables_set" id="set_t2">
-        <field name="VAR" id="v_tick_2">tick_2_ago</field>
-        <value name="VALUE">
-          <block type="lists_getIndex" id="get_t2">
-            <mutation statement="false" at="true"></mutation>
-            <field name="MODE">GET</field>
-            <field name="WHERE">FROM_END</field>
-            <value name="VALUE"><block type="ticks" id="ticks_t2"></block></value>
-            <value name="AT"><block type="math_number" id="at_t2"><field name="NUM">3</field></block></value>
-          </block>
-        </value>
-        <next>
-
-      <!-- ================================================ -->
-      <!-- STEP 2: Fresh EMA50 crossover (PATH 1)           -->
-      <!--                                                  -->
-      <!-- fresh_ema50_up:                                  -->
-      <!--   EMA10 > EMA50                                  -->
-      <!--   AND tick_2 <= EMA50                            -->
-      <!--   AND tick_0 > tick_1 > tick_2                   -->
-      <!--   AND tick_0 > EMA50                             -->
-      <!--                                                  -->
-      <!-- fresh_ema50_down (mirror):                       -->
-      <!--   EMA10 < EMA50                                  -->
-      <!--   AND tick_2 >= EMA50                            -->
-      <!--   AND tick_0 < tick_1 < tick_2                   -->
-      <!--   AND tick_0 < EMA50                             -->
-      <!-- ================================================ -->
-
-      <block type="variables_set" id="set_f50u">
-        <field name="VAR" id="v_fresh_ema50_up">fresh_ema50_up</field>
-        <value name="VALUE">
-          <block type="logic_operation" id="f50u_1"><field name="OP">AND</field>
-            <value name="A">
-              <block type="logic_operation" id="f50u_2"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_compare" id="f50u_ema"><field name="OP">GT</field>
-                    <value name="A"><block type="variables_get" id="f50u_e10"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                    <value name="B"><block type="variables_get" id="f50u_e50"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f50u_t2"><field name="OP">LTE</field>
-                    <value name="A"><block type="variables_get" id="f50u_t2a"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                    <value name="B"><block type="variables_get" id="f50u_e50b"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-            <value name="B">
-              <block type="logic_operation" id="f50u_3"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_operation" id="f50u_4"><field name="OP">AND</field>
-                    <value name="A">
-                      <block type="logic_compare" id="f50u_01"><field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="f50u_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                        <value name="B"><block type="variables_get" id="f50u_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                      </block>
-                    </value>
-                    <value name="B">
-                      <block type="logic_compare" id="f50u_12"><field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="f50u_t1b"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                        <value name="B"><block type="variables_get" id="f50u_t2b"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                      </block>
-                    </value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f50u_above"><field name="OP">GT</field>
-                    <value name="A"><block type="variables_get" id="f50u_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                    <value name="B"><block type="variables_get" id="f50u_e50c"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-          </block>
-        </value>
-        <next>
-
-      <!-- fresh_ema50_down (mirror) -->
-      <block type="variables_set" id="set_f50d">
-        <field name="VAR" id="v_fresh_ema50_down">fresh_ema50_down</field>
-        <value name="VALUE">
-          <block type="logic_operation" id="f50d_1"><field name="OP">AND</field>
-            <value name="A">
-              <block type="logic_operation" id="f50d_2"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_compare" id="f50d_ema"><field name="OP">LT</field>
-                    <value name="A"><block type="variables_get" id="f50d_e10"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                    <value name="B"><block type="variables_get" id="f50d_e50"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f50d_t2"><field name="OP">GTE</field>
-                    <value name="A"><block type="variables_get" id="f50d_t2a"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                    <value name="B"><block type="variables_get" id="f50d_e50b"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-            <value name="B">
-              <block type="logic_operation" id="f50d_3"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_operation" id="f50d_4"><field name="OP">AND</field>
-                    <value name="A">
-                      <block type="logic_compare" id="f50d_01"><field name="OP">LT</field>
-                        <value name="A"><block type="variables_get" id="f50d_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                        <value name="B"><block type="variables_get" id="f50d_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                      </block>
-                    </value>
-                    <value name="B">
-                      <block type="logic_compare" id="f50d_12"><field name="OP">LT</field>
-                        <value name="A"><block type="variables_get" id="f50d_t1b"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                        <value name="B"><block type="variables_get" id="f50d_t2b"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                      </block>
-                    </value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f50d_below"><field name="OP">LT</field>
-                    <value name="A"><block type="variables_get" id="f50d_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                    <value name="B"><block type="variables_get" id="f50d_e50c"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-          </block>
-        </value>
-        <next>
-
-      <!-- ================================================ -->
-      <!-- STEP 3: Fresh EMA10 cross (PATH 3)               -->
-      <!--                                                  -->
-      <!-- fresh_ema10_up:                                  -->
-      <!--   EMA10 > EMA50                                  -->
-      <!--   AND tick_2 <= EMA10                            -->
-      <!--   AND tick_0 > tick_1 > tick_2                   -->
-      <!--   AND tick_0 > EMA10                             -->
-      <!--                                                  -->
-      <!-- fresh_ema10_down (mirror):                       -->
-      <!--   EMA10 < EMA50                                  -->
-      <!--   AND tick_2 >= EMA10                            -->
-      <!--   AND tick_0 < tick_1 < tick_2                   -->
-      <!--   AND tick_0 < EMA10                             -->
-      <!-- ================================================ -->
-
-      <block type="variables_set" id="set_f10u">
-        <field name="VAR" id="v_fresh_ema10_up">fresh_ema10_up</field>
-        <value name="VALUE">
-          <block type="logic_operation" id="f10u_1"><field name="OP">AND</field>
-            <value name="A">
-              <block type="logic_operation" id="f10u_2"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_compare" id="f10u_ema"><field name="OP">GT</field>
-                    <value name="A"><block type="variables_get" id="f10u_e10"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10u_e50"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f10u_t2"><field name="OP">LTE</field>
-                    <value name="A"><block type="variables_get" id="f10u_t2a"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10u_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-            <value name="B">
-              <block type="logic_operation" id="f10u_3"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_operation" id="f10u_4"><field name="OP">AND</field>
-                    <value name="A">
-                      <block type="logic_compare" id="f10u_01"><field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="f10u_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                        <value name="B"><block type="variables_get" id="f10u_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                      </block>
-                    </value>
-                    <value name="B">
-                      <block type="logic_compare" id="f10u_12"><field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="f10u_t1b"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                        <value name="B"><block type="variables_get" id="f10u_t2b"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                      </block>
-                    </value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f10u_above"><field name="OP">GT</field>
-                    <value name="A"><block type="variables_get" id="f10u_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10u_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-          </block>
-        </value>
-        <next>
-
-      <!-- fresh_ema10_down (mirror) -->
-      <block type="variables_set" id="set_f10d">
-        <field name="VAR" id="v_fresh_ema10_down">fresh_ema10_down</field>
-        <value name="VALUE">
-          <block type="logic_operation" id="f10d_1"><field name="OP">AND</field>
-            <value name="A">
-              <block type="logic_operation" id="f10d_2"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_compare" id="f10d_ema"><field name="OP">LT</field>
-                    <value name="A"><block type="variables_get" id="f10d_e10"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10d_e50"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f10d_t2"><field name="OP">GTE</field>
-                    <value name="A"><block type="variables_get" id="f10d_t2a"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10d_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-            <value name="B">
-              <block type="logic_operation" id="f10d_3"><field name="OP">AND</field>
-                <value name="A">
-                  <block type="logic_operation" id="f10d_4"><field name="OP">AND</field>
-                    <value name="A">
-                      <block type="logic_compare" id="f10d_01"><field name="OP">LT</field>
-                        <value name="A"><block type="variables_get" id="f10d_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                        <value name="B"><block type="variables_get" id="f10d_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                      </block>
-                    </value>
-                    <value name="B">
-                      <block type="logic_compare" id="f10d_12"><field name="OP">LT</field>
-                        <value name="A"><block type="variables_get" id="f10d_t1b"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                        <value name="B"><block type="variables_get" id="f10d_t2b"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                      </block>
-                    </value>
-                  </block>
-                </value>
-                <value name="B">
-                  <block type="logic_compare" id="f10d_below"><field name="OP">LT</field>
-                    <value name="A"><block type="variables_get" id="f10d_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                    <value name="B"><block type="variables_get" id="f10d_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                  </block>
-                </value>
-              </block>
-            </value>
-          </block>
-        </value>
-        <next>
-
-      <!-- ================================================ -->
-      <!-- STEP 4: PURCHASE DECISION (3 paths)              -->
-      <!--                                                  -->
-      <!-- CALL =                                           -->
-      <!--   PATH 1: fresh_ema50_up                         -->
-      <!--   OR PATH 3: fresh_ema10_up                      -->
-      <!--   OR PATH 2: EMA10>EMA50                         -->
-      <!--              AND t0>EMA10 AND t1>EMA10           -->
-      <!--              AND t0>t1 AND t1>t2 AND t0>EMA50    -->
-      <!--                                                  -->
-      <!-- PUT = exact mirror                               -->
-      <!-- ================================================ -->
-
-      <block type="controls_if" id="main_decision">
-        <mutation elseif="1"></mutation>
-
-        <!-- IF0: CALL -->
+      <block type="controls_if" id="cooldown_check">
+        <mutation else="1"></mutation>
         <value name="IF0">
-          <block type="logic_operation" id="call_p1_or_rest"><field name="OP">OR</field>
-            <value name="A">
-              <block type="variables_get" id="call_f50"><field name="VAR" id="v_fresh_ema50_up">fresh_ema50_up</field></block>
-            </value>
-            <value name="B">
-              <block type="logic_operation" id="call_p3_or_p2"><field name="OP">OR</field>
-                <value name="A">
-                  <block type="variables_get" id="call_f10"><field name="VAR" id="v_fresh_ema10_up">fresh_ema10_up</field></block>
-                </value>
-                <value name="B">
-                  <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
-                  <block type="logic_operation" id="call_p2"><field name="OP">AND</field>
-                    <value name="A">
-                      <!-- EMA10 > EMA50 AND t0 > EMA10 AND t1 > EMA10 -->
-                      <block type="logic_operation" id="call_p2a"><field name="OP">AND</field>
-                        <value name="A">
-                          <block type="logic_compare" id="call_ema"><field name="OP">GT</field>
-                            <value name="A"><block type="variables_get" id="call_e10"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                            <value name="B"><block type="variables_get" id="call_e50"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                          </block>
-                        </value>
-                        <value name="B">
-                          <block type="logic_operation" id="call_p2b"><field name="OP">AND</field>
-                            <value name="A">
-                              <block type="logic_compare" id="call_t0e10"><field name="OP">GT</field>
-                                <value name="A"><block type="variables_get" id="call_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                                <value name="B"><block type="variables_get" id="call_e10a"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                              </block>
-                            </value>
-                            <value name="B">
-                              <block type="logic_operation" id="call_p2c"><field name="OP">AND</field>
-                                <value name="A">
-                                  <block type="logic_compare" id="call_t1e10"><field name="OP">GT</field>
-                                    <value name="A"><block type="variables_get" id="call_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                                    <value name="B"><block type="variables_get" id="call_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                                  </block>
-                                </value>
-                                <value name="B">
-                                  <!-- 2-tick momentum confirmation -->
-                                  <block type="logic_operation" id="call_p2d"><field name="OP">AND</field>
-                                    <value name="A">
-                                      <block type="logic_compare" id="call_t0t1"><field name="OP">GT</field>
-                                        <value name="A"><block type="variables_get" id="call_t0c"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                                        <value name="B"><block type="variables_get" id="call_t1b"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                                      </block>
-                                    </value>
-                                    <value name="B">
-                                      <block type="logic_compare" id="call_t1t2"><field name="OP">GT</field>
-                                        <value name="A"><block type="variables_get" id="call_t1c"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                                        <value name="B"><block type="variables_get" id="call_t2a"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                                      </block>
-                                    </value>
-                                  </block>
-                                </value>
-                              </block>
-                            </value>
-                          </block>
-                        </value>
-                      </block>
-                    </value>
-                    <value name="B">
-                      <!-- t0 > EMA50 -->
-                      <block type="logic_compare" id="call_t0e50"><field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="call_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                        <value name="B"><block type="variables_get" id="call_e50a"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                      </block>
-                    </value>
-                  </block>
-                </value>
-              </block>
-            </value>
+          <block type="logic_compare" id="cooldown_check_gt"><field name="OP">GT</field>
+            <value name="A"><block type="variables_get" id="cooldown_get"><field name="VAR" id="v_tick_counter">tick_counter</field></block></value>
+            <value name="B"><block type="math_number" id="cooldown_zero"><field name="NUM">0</field></block></value>
           </block>
         </value>
         <statement name="DO0">
-          <block type="controls_if" id="call_position_guard">
-            <value name="IF0">
-              <block type="logic_negate" id="call_not_selling">
-                <value name="BOOL">
-                  <block type="check_sell" id="call_check_sell"></block>
-                </value>
-              </block>
+          <block type="math_change" id="cooldown_decrement">
+            <field name="VAR" id="v_tick_counter">tick_counter</field>
+            <value name="DELTA">
+              <shadow type="math_number" id="cooldown_dec_val"><field name="NUM">-1</field></shadow>
             </value>
-            <statement name="DO0">
-              <block type="purchase" id="buy_call"><field name="PURCHASE_LIST">CALL</field></block>
-            </statement>
           </block>
         </statement>
-
-        <!-- IF1: PUT (exact mirror) -->
-        <value name="IF1">
-          <block type="logic_operation" id="put_p1_or_rest"><field name="OP">OR</field>
-            <value name="A">
-              <block type="variables_get" id="put_f50"><field name="VAR" id="v_fresh_ema50_down">fresh_ema50_down</field></block>
-            </value>
-            <value name="B">
-              <block type="logic_operation" id="put_p3_or_p2"><field name="OP">OR</field>
-                <value name="A">
-                  <block type="variables_get" id="put_f10"><field name="VAR" id="v_fresh_ema10_down">fresh_ema10_down</field></block>
+        <statement name="ELSE">
+          <block type="rsi_statement" id="set_rsi">
+            <field name="VARIABLE" id="v_rsi">rsi_value</field>
+            <statement name="STATEMENT">
+              <block type="input_list" id="rsi_input" deletable="false" movable="false">
+                <value name="INPUT_LIST">
+                  <block type="ticks" id="rsi_ticks" deletable="false" movable="false"></block>
                 </value>
-                <value name="B">
-                  <!-- PATH 2: EMA trend + EMA10 clearance + EMA50 check -->
-                  <block type="logic_operation" id="put_p2"><field name="OP">AND</field>
+                <next>
+                  <block type="period" id="rsi_period" deletable="false" movable="false">
+                    <value name="PERIOD">
+                      <shadow type="math_number" id="rsi_period_val"><field name="NUM">14</field></shadow>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="controls_if" id="rsi_decision">
+                <mutation elseif="1"></mutation>
+                <value name="IF0">
+                  <block type="logic_operation" id="rsi_call_range"><field name="OP">AND</field>
                     <value name="A">
-                      <!-- EMA10 < EMA50 AND t0 < EMA10 AND t1 < EMA10 AND t0 < t1 AND t1 < t2 -->
-                      <block type="logic_operation" id="put_p2a"><field name="OP">AND</field>
-                        <value name="A">
-                          <block type="logic_compare" id="put_ema"><field name="OP">LT</field>
-                            <value name="A"><block type="variables_get" id="put_e10"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                            <value name="B"><block type="variables_get" id="put_e50"><field name="VAR" id="v_ema50">ema_50</field></block></value>
-                          </block>
-                        </value>
-                        <value name="B">
-                          <block type="logic_operation" id="put_p2b"><field name="OP">AND</field>
-                            <value name="A">
-                              <block type="logic_compare" id="put_t0e10"><field name="OP">LT</field>
-                                <value name="A"><block type="variables_get" id="put_t0a"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                                <value name="B"><block type="variables_get" id="put_e10a"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                              </block>
-                            </value>
-                            <value name="B">
-                              <block type="logic_operation" id="put_p2c"><field name="OP">AND</field>
-                                <value name="A">
-                                  <block type="logic_compare" id="put_t1e10"><field name="OP">LT</field>
-                                    <value name="A"><block type="variables_get" id="put_t1a"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                                    <value name="B"><block type="variables_get" id="put_e10b"><field name="VAR" id="v_ema10">ema_10</field></block></value>
-                                  </block>
-                                </value>
-                                <value name="B">
-                                  <!-- 2-tick momentum confirmation -->
-                                  <block type="logic_operation" id="put_p2d"><field name="OP">AND</field>
-                                    <value name="A">
-                                      <block type="logic_compare" id="put_t0t1"><field name="OP">LT</field>
-                                        <value name="A"><block type="variables_get" id="put_t0c"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                                        <value name="B"><block type="variables_get" id="put_t1b"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                                      </block>
-                                    </value>
-                                    <value name="B">
-                                      <block type="logic_compare" id="put_t1t2"><field name="OP">LT</field>
-                                        <value name="A"><block type="variables_get" id="put_t1c"><field name="VAR" id="v_tick_1">tick_1_ago</field></block></value>
-                                        <value name="B"><block type="variables_get" id="put_t2a"><field name="VAR" id="v_tick_2">tick_2_ago</field></block></value>
-                                      </block>
-                                    </value>
-                                  </block>
-                                </value>
-                              </block>
-                            </value>
-                          </block>
-                        </value>
+                      <block type="logic_compare" id="rsi_call_low"><field name="OP">GT</field>
+                        <value name="A"><block type="variables_get" id="rsi_call_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                        <value name="B"><block type="math_number" id="rsi_call_min"><field name="NUM">55</field></block></value>
                       </block>
                     </value>
                     <value name="B">
-                      <!-- t0 < EMA50 -->
-                      <block type="logic_compare" id="put_t0e50"><field name="OP">LT</field>
-                        <value name="A"><block type="variables_get" id="put_t0b"><field name="VAR" id="v_tick_0">tick_0_now</field></block></value>
-                        <value name="B"><block type="variables_get" id="put_e50a"><field name="VAR" id="v_ema50">ema_50</field></block></value>
+                      <block type="logic_compare" id="rsi_call_high"><field name="OP">LT</field>
+                        <value name="A"><block type="variables_get" id="rsi_call_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                        <value name="B"><block type="math_number" id="rsi_call_max"><field name="NUM">70</field></block></value>
                       </block>
                     </value>
                   </block>
                 </value>
-              </block>
-            </value>
-          </block>
-        </value>
-        <statement name="DO1">
-          <block type="controls_if" id="put_position_guard">
-            <value name="IF0">
-              <block type="logic_negate" id="put_not_selling">
-                <value name="BOOL">
-                  <block type="check_sell" id="put_check_sell"></block>
+                <statement name="DO0">
+                  <block type="controls_if" id="call_position_guard">
+                    <value name="IF0">
+                      <block type="logic_negate" id="call_not_selling">
+                        <value name="BOOL">
+                          <block type="check_sell" id="call_check_sell"></block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="purchase" id="buy_call"><field name="PURCHASE_LIST">CALL</field></block>
+                    </statement>
+                  </block>
+                </statement>
+                <value name="IF1">
+                  <block type="logic_operation" id="rsi_put_range"><field name="OP">AND</field>
+                    <value name="A">
+                      <block type="logic_compare" id="rsi_put_high"><field name="OP">LT</field>
+                        <value name="A"><block type="variables_get" id="rsi_put_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                        <value name="B"><block type="math_number" id="rsi_put_max"><field name="NUM">45</field></block></value>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="logic_compare" id="rsi_put_low"><field name="OP">GT</field>
+                        <value name="A"><block type="variables_get" id="rsi_put_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                        <value name="B"><block type="math_number" id="rsi_put_min"><field name="NUM">30</field></block></value>
+                      </block>
+                    </value>
+                  </block>
                 </value>
+                <statement name="DO1">
+                  <block type="controls_if" id="put_position_guard">
+                    <value name="IF0">
+                      <block type="logic_negate" id="put_not_selling">
+                        <value name="BOOL">
+                          <block type="check_sell" id="put_check_sell"></block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="purchase" id="buy_put"><field name="PURCHASE_LIST">PUT</field></block>
+                    </statement>
+                  </block>
+                </statement>
               </block>
-            </value>
-            <statement name="DO0">
-              <block type="purchase" id="buy_put"><field name="PURCHASE_LIST">PUT</field></block>
-            </statement>
+            </next>
           </block>
         </statement>
       </block>
-      <!-- end controls_if -->
-
-        </next></block><!-- end set_f10d -->
-        </next></block><!-- end set_f10u -->
-        </next></block><!-- end set_f50d -->
-        </next></block><!-- end set_f50u -->
-        </next></block><!-- end set_t2 -->
-        </next></block><!-- end set_t1 -->
-        </next></block><!-- end set_t0 -->
-        </next></block><!-- end set_ema50 -->
-      </next></block><!-- end set_ema10 -->
-
     </statement>
   </block>
 
