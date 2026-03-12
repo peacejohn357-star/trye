@@ -6,6 +6,12 @@
     <variable id="v_multiplier">martingale_multiplier</variable>
     <variable id="v_tick_counter">tick_counter</variable>
     <variable id="v_rsi">rsi_value</variable>
+    <variable id="v_bb_upper">upper_band</variable>
+    <variable id="v_bb_middle">middle_band</variable>
+    <variable id="v_bb_lower">lower_band</variable>
+    <variable id="v_bb_width">bb_width</variable>
+    <variable id="v_ema_fast">ema_fast</variable>
+    <variable id="v_ema_slow">ema_slow</variable>
   </variables>
 
   <!-- ============================================ -->
@@ -161,7 +167,7 @@
   </block>
 
   <!-- ============================================ -->
-  <!-- BEFORE PURCHASE (RSI + COOLDOWN)             -->
+  <!-- BEFORE PURCHASE (BBA + RSI + EMA + COOLDOWN)  -->
   <!-- ============================================ -->
   <block type="before_purchase" id="before_block" deletable="false" x="0" y="1279">
     <statement name="BEFOREPURCHASE_STACK">
@@ -182,85 +188,316 @@
           </block>
         </statement>
         <statement name="ELSE">
-          <block type="rsi_statement" id="set_rsi">
-            <field name="VARIABLE" id="v_rsi">rsi_value</field>
+          <block type="bb_statement" id="set_bb_upper">
+            <field name="VARIABLE" id="v_bb_upper">upper_band</field>
+            <field name="BBRESULT_LIST">1</field>
+            <field name="MA_TYPE_LIST">EMA</field>
             <statement name="STATEMENT">
-              <block type="input_list" id="rsi_input" deletable="false" movable="false">
+              <block type="input_list" id="bb_upper_input" deletable="false" movable="false">
                 <value name="INPUT_LIST">
-                  <block type="ticks" id="rsi_ticks" deletable="false" movable="false"></block>
+                  <block type="ticks" id="bb_upper_ticks" deletable="false" movable="false"></block>
                 </value>
                 <next>
-                  <block type="period" id="rsi_period" deletable="false" movable="false">
+                  <block type="period" id="bb_upper_period" deletable="false" movable="false">
                     <value name="PERIOD">
-                      <shadow type="math_number" id="rsi_period_val"><field name="NUM">14</field></shadow>
+                      <shadow type="math_number" id="bb_upper_period_val"><field name="NUM">15</field></shadow>
                     </value>
+                    <next>
+                      <block type="std_dev_multiplier_up" id="bb_upper_dev_up" deletable="false" movable="false">
+                        <value name="UPMULTIPLIER">
+                          <shadow type="math_number" id="bb_upper_dev_up_val"><field name="NUM">2</field></shadow>
+                        </value>
+                        <next>
+                          <block type="std_dev_multiplier_down" id="bb_upper_dev_down" deletable="false" movable="false">
+                            <value name="DOWNMULTIPLIER">
+                              <shadow type="math_number" id="bb_upper_dev_down_val"><field name="NUM">2</field></shadow>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
                   </block>
                 </next>
               </block>
             </statement>
             <next>
-              <block type="controls_if" id="rsi_decision">
-                <mutation elseif="1"></mutation>
-                <value name="IF0">
-                  <block type="logic_operation" id="rsi_call_range"><field name="OP">AND</field>
-                    <value name="A">
-                      <block type="logic_compare" id="rsi_call_low"><field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="rsi_call_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                        <value name="B"><block type="math_number" id="rsi_call_min"><field name="NUM">55</field></block></value>
-                      </block>
+              <block type="bb_statement" id="set_bb_middle">
+                <field name="VARIABLE" id="v_bb_middle">middle_band</field>
+                <field name="BBRESULT_LIST">0</field>
+                <field name="MA_TYPE_LIST">EMA</field>
+                <statement name="STATEMENT">
+                  <block type="input_list" id="bb_middle_input" deletable="false" movable="false">
+                    <value name="INPUT_LIST">
+                      <block type="ticks" id="bb_middle_ticks" deletable="false" movable="false"></block>
                     </value>
-                    <value name="B">
-                      <block type="logic_compare" id="rsi_call_high"><field name="OP">LT</field>
-                        <value name="A"><block type="variables_get" id="rsi_call_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                        <value name="B"><block type="math_number" id="rsi_call_max"><field name="NUM">70</field></block></value>
-                      </block>
-                    </value>
-                  </block>
-                </value>
-                <statement name="DO0">
-                  <block type="controls_if" id="call_position_guard">
-                    <value name="IF0">
-                      <block type="logic_negate" id="call_not_selling">
-                        <value name="BOOL">
-                          <block type="check_sell" id="call_check_sell"></block>
+                    <next>
+                      <block type="period" id="bb_middle_period" deletable="false" movable="false">
+                        <value name="PERIOD">
+                          <shadow type="math_number" id="bb_middle_period_val"><field name="NUM">15</field></shadow>
                         </value>
+                        <next>
+                          <block type="std_dev_multiplier_up" id="bb_middle_dev_up" deletable="false" movable="false">
+                            <value name="UPMULTIPLIER">
+                              <shadow type="math_number" id="bb_middle_dev_up_val"><field name="NUM">2</field></shadow>
+                            </value>
+                            <next>
+                              <block type="std_dev_multiplier_down" id="bb_middle_dev_down" deletable="false" movable="false">
+                                <value name="DOWNMULTIPLIER">
+                                  <shadow type="math_number" id="bb_middle_dev_down_val"><field name="NUM">2</field></shadow>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
                       </block>
-                    </value>
-                    <statement name="DO0">
-                      <block type="purchase" id="buy_call"><field name="PURCHASE_LIST">CALL</field></block>
-                    </statement>
+                    </next>
                   </block>
                 </statement>
-                <value name="IF1">
-                  <block type="logic_operation" id="rsi_put_range"><field name="OP">AND</field>
-                    <value name="A">
-                      <block type="logic_compare" id="rsi_put_high"><field name="OP">LT</field>
-                        <value name="A"><block type="variables_get" id="rsi_put_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                        <value name="B"><block type="math_number" id="rsi_put_max"><field name="NUM">45</field></block></value>
-                      </block>
-                    </value>
-                    <value name="B">
-                      <block type="logic_compare" id="rsi_put_low"><field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="rsi_put_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                        <value name="B"><block type="math_number" id="rsi_put_min"><field name="NUM">30</field></block></value>
-                      </block>
-                    </value>
-                  </block>
-                </value>
-                <statement name="DO1">
-                  <block type="controls_if" id="put_position_guard">
-                    <value name="IF0">
-                      <block type="logic_negate" id="put_not_selling">
-                        <value name="BOOL">
-                          <block type="check_sell" id="put_check_sell"></block>
+                <next>
+                  <block type="bb_statement" id="set_bb_lower">
+                    <field name="VARIABLE" id="v_bb_lower">lower_band</field>
+                    <field name="BBRESULT_LIST">2</field>
+                    <field name="MA_TYPE_LIST">EMA</field>
+                    <statement name="STATEMENT">
+                      <block type="input_list" id="bb_lower_input" deletable="false" movable="false">
+                        <value name="INPUT_LIST">
+                          <block type="ticks" id="bb_lower_ticks" deletable="false" movable="false"></block>
                         </value>
+                        <next>
+                          <block type="period" id="bb_lower_period" deletable="false" movable="false">
+                            <value name="PERIOD">
+                              <shadow type="math_number" id="bb_lower_period_val"><field name="NUM">15</field></shadow>
+                            </value>
+                            <next>
+                              <block type="std_dev_multiplier_up" id="bb_lower_dev_up" deletable="false" movable="false">
+                                <value name="UPMULTIPLIER">
+                                  <shadow type="math_number" id="bb_lower_dev_up_val"><field name="NUM">2</field></shadow>
+                                </value>
+                                <next>
+                                  <block type="std_dev_multiplier_down" id="bb_lower_dev_down" deletable="false" movable="false">
+                                    <value name="DOWNMULTIPLIER">
+                                      <shadow type="math_number" id="bb_lower_dev_down_val"><field name="NUM">2</field></shadow>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
                       </block>
-                    </value>
-                    <statement name="DO0">
-                      <block type="purchase" id="buy_put"><field name="PURCHASE_LIST">PUT</field></block>
                     </statement>
+                    <next>
+                      <block type="variables_set" id="set_bb_width">
+                        <field name="VAR" id="v_bb_width">bb_width</field>
+                        <value name="VALUE">
+                          <block type="math_arithmetic" id="bb_width_calc">
+                            <field name="OP">MINUS</field>
+                            <value name="A">
+                              <block type="variables_get" id="bb_width_upper">
+                                <field name="VAR" id="v_bb_upper">upper_band</field>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="variables_get" id="bb_width_lower">
+                                <field name="VAR" id="v_bb_lower">lower_band</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="rsi_statement" id="set_rsi">
+                            <field name="VARIABLE" id="v_rsi">rsi_value</field>
+                            <statement name="STATEMENT">
+                              <block type="input_list" id="rsi_input" deletable="false" movable="false">
+                                <value name="INPUT_LIST">
+                                  <block type="ticks" id="rsi_ticks" deletable="false" movable="false"></block>
+                                </value>
+                                <next>
+                                  <block type="period" id="rsi_period" deletable="false" movable="false">
+                                    <value name="PERIOD">
+                                      <shadow type="math_number" id="rsi_period_val"><field name="NUM">14</field></shadow>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </statement>
+                            <next>
+                              <block type="variables_set" id="set_ema_fast">
+                                <field name="VAR" id="v_ema_fast">ema_fast</field>
+                                <value name="VALUE">
+                                  <block type="ema" id="ema_fast_block">
+                                    <value name="INPUT">
+                                      <block type="ticks" id="ema_fast_ticks"></block>
+                                    </value>
+                                    <value name="PERIOD">
+                                      <shadow type="math_number" id="ema_fast_period"><field name="NUM">15</field></shadow>
+                                    </value>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="variables_set" id="set_ema_slow">
+                                    <field name="VAR" id="v_ema_slow">ema_slow</field>
+                                    <value name="VALUE">
+                                      <block type="ema" id="ema_slow_block">
+                                        <value name="INPUT">
+                                          <block type="ticks" id="ema_slow_ticks"></block>
+                                        </value>
+                                        <value name="PERIOD">
+                                          <shadow type="math_number" id="ema_slow_period"><field name="NUM">50</field></shadow>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="controls_if" id="entry_decision">
+                                        <mutation elseif="1"></mutation>
+                                        <value name="IF0">
+                                          <block type="logic_operation" id="call_conditions"><field name="OP">AND</field>
+                                            <value name="A">
+                                              <block type="logic_operation" id="call_conditions_left"><field name="OP">AND</field>
+                                                <value name="A">
+                                                  <block type="logic_operation" id="call_price_width"><field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="call_tick_upper"><field name="OP">GTE</field>
+                                                        <value name="A"><block type="tick" id="call_tick"></block></value>
+                                                        <value name="B">
+                                                          <block type="variables_get" id="call_upper_band">
+                                                            <field name="VAR" id="v_bb_upper">upper_band</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="call_width_check"><field name="OP">GT</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="call_bb_width">
+                                                            <field name="VAR" id="v_bb_width">bb_width</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B"><block type="math_number" id="bb_width_min"><field name="NUM">0.4</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <value name="B">
+                                                  <block type="logic_operation" id="call_rsi_range"><field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="call_rsi_low"><field name="OP">GT</field>
+                                                        <value name="A"><block type="variables_get" id="call_rsi_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                        <value name="B"><block type="math_number" id="call_rsi_min"><field name="NUM">60</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="call_rsi_high"><field name="OP">LT</field>
+                                                        <value name="A"><block type="variables_get" id="call_rsi_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                        <value name="B"><block type="math_number" id="call_rsi_max"><field name="NUM">70</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <value name="B">
+                                              <block type="logic_compare" id="call_ema_trend"><field name="OP">GT</field>
+                                                <value name="A"><block type="variables_get" id="call_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
+                                                <value name="B"><block type="variables_get" id="call_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
+                                              </block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                        <statement name="DO0">
+                                          <block type="controls_if" id="call_position_guard">
+                                            <value name="IF0">
+                                              <block type="logic_negate" id="call_not_selling">
+                                                <value name="BOOL">
+                                                  <block type="check_sell" id="call_check_sell"></block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <statement name="DO0">
+                                              <block type="purchase" id="buy_call"><field name="PURCHASE_LIST">CALL</field></block>
+                                            </statement>
+                                          </block>
+                                        </statement>
+                                        <value name="IF1">
+                                          <block type="logic_operation" id="put_conditions"><field name="OP">AND</field>
+                                            <value name="A">
+                                              <block type="logic_operation" id="put_conditions_left"><field name="OP">AND</field>
+                                                <value name="A">
+                                                  <block type="logic_operation" id="put_price_width"><field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="put_tick_lower"><field name="OP">LTE</field>
+                                                        <value name="A"><block type="tick" id="put_tick"></block></value>
+                                                        <value name="B">
+                                                          <block type="variables_get" id="put_lower_band">
+                                                            <field name="VAR" id="v_bb_lower">lower_band</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="put_width_check"><field name="OP">GT</field>
+                                                        <value name="A">
+                                                          <block type="variables_get" id="put_bb_width">
+                                                            <field name="VAR" id="v_bb_width">bb_width</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B"><block type="math_number" id="bb_width_min_put"><field name="NUM">0.4</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <value name="B">
+                                                  <block type="logic_operation" id="put_rsi_range"><field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="put_rsi_high"><field name="OP">LT</field>
+                                                        <value name="A"><block type="variables_get" id="put_rsi_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                        <value name="B"><block type="math_number" id="put_rsi_max"><field name="NUM">40</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="put_rsi_low"><field name="OP">GT</field>
+                                                        <value name="A"><block type="variables_get" id="put_rsi_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                        <value name="B"><block type="math_number" id="put_rsi_min"><field name="NUM">30</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <value name="B">
+                                              <block type="logic_compare" id="put_ema_trend"><field name="OP">LT</field>
+                                                <value name="A"><block type="variables_get" id="put_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
+                                                <value name="B"><block type="variables_get" id="put_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
+                                              </block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                        <statement name="DO1">
+                                          <block type="controls_if" id="put_position_guard">
+                                            <value name="IF0">
+                                              <block type="logic_negate" id="put_not_selling">
+                                                <value name="BOOL">
+                                                  <block type="check_sell" id="put_check_sell"></block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <statement name="DO0">
+                                              <block type="purchase" id="buy_put"><field name="PURCHASE_LIST">PUT</field></block>
+                                            </statement>
+                                          </block>
+                                        </statement>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
                   </block>
-                </statement>
+                </next>
               </block>
             </next>
           </block>
