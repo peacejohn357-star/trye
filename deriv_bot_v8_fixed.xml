@@ -322,31 +322,39 @@
                               </block>
                             </statement>
                             <next>
-                              <block type="variables_set" id="set_ema_fast">
-                                <field name="VAR" id="v_ema_fast">ema_fast</field>
-                                <value name="VALUE">
-                                  <block type="ema" id="ema_fast_block">
-                                    <value name="INPUT">
-                                      <block type="ticks" id="ema_fast_ticks"></block>
+                              <block type="ema_statement" id="set_ema_fast">
+                                <field name="VARIABLE" id="v_ema_fast">ema_fast</field>
+                                <statement name="STATEMENT">
+                                  <block type="input_list" id="ema_fast_input" deletable="false" movable="false">
+                                    <value name="INPUT_LIST">
+                                      <block type="ticks" id="ema_fast_ticks" deletable="false" movable="false"></block>
                                     </value>
-                                    <value name="PERIOD">
-                                      <shadow type="math_number" id="ema_fast_period"><field name="NUM">15</field></shadow>
-                                    </value>
-                                  </block>
-                                </value>
-                                <next>
-                                  <block type="variables_set" id="set_ema_slow">
-                                    <field name="VAR" id="v_ema_slow">ema_slow</field>
-                                    <value name="VALUE">
-                                      <block type="ema" id="ema_slow_block">
-                                        <value name="INPUT">
-                                          <block type="ticks" id="ema_slow_ticks"></block>
-                                        </value>
+                                    <next>
+                                      <block type="period" id="ema_fast_period" deletable="false" movable="false">
                                         <value name="PERIOD">
-                                          <shadow type="math_number" id="ema_slow_period"><field name="NUM">50</field></shadow>
+                                          <shadow type="math_number" id="ema_fast_period_val"><field name="NUM">15</field></shadow>
                                         </value>
                                       </block>
-                                    </value>
+                                    </next>
+                                  </block>
+                                </statement>
+                                <next>
+                                  <block type="ema_statement" id="set_ema_slow">
+                                    <field name="VARIABLE" id="v_ema_slow">ema_slow</field>
+                                    <statement name="STATEMENT">
+                                      <block type="input_list" id="ema_slow_input" deletable="false" movable="false">
+                                        <value name="INPUT_LIST">
+                                          <block type="ticks" id="ema_slow_ticks" deletable="false" movable="false"></block>
+                                        </value>
+                                        <next>
+                                          <block type="period" id="ema_slow_period" deletable="false" movable="false">
+                                            <value name="PERIOD">
+                                              <shadow type="math_number" id="ema_slow_period_val"><field name="NUM">50</field></shadow>
+                                            </value>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </statement>
                                     <next>
                                       <block type="controls_if" id="entry_decision">
                                         <mutation elseif="1"></mutation>
