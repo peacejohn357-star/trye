@@ -12,6 +12,9 @@
     <variable id="v_bb_width">bb_width</variable>
     <variable id="v_ema_fast">ema_fast</variable>
     <variable id="v_ema_slow">ema_slow</variable>
+    <variable id="v_last_tick_0">last_tick_0</variable>
+    <variable id="v_last_tick_1">last_tick_1</variable>
+    <variable id="v_last_tick_2">last_tick_2</variable>
   </variables>
 
   <!-- ============================================ -->
@@ -356,58 +359,118 @@
                                       </block>
                                     </statement>
                                     <next>
-                                      <block type="controls_if" id="entry_decision">
+                                      <block type="variables_set" id="set_last_tick_0">
+                                        <field name="VAR" id="v_last_tick_0">last_tick_0</field>
+                                        <value name="VALUE">
+                                          <block type="tick" id="tick_offset_0">
+                                            <value name="OFFSET">
+                                              <block type="math_number" id="tick_offset_val_0"><field name="NUM">0</field></block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="variables_set" id="set_last_tick_1">
+                                            <field name="VAR" id="v_last_tick_1">last_tick_1</field>
+                                            <value name="VALUE">
+                                              <block type="tick" id="tick_offset_1">
+                                                <value name="OFFSET">
+                                                  <block type="math_number" id="tick_offset_val_1"><field name="NUM">1</field></block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <next>
+                                              <block type="variables_set" id="set_last_tick_2">
+                                                <field name="VAR" id="v_last_tick_2">last_tick_2</field>
+                                                <value name="VALUE">
+                                                  <block type="tick" id="tick_offset_2">
+                                                    <value name="OFFSET">
+                                                      <block type="math_number" id="tick_offset_val_2"><field name="NUM">2</field></block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="controls_if" id="entry_decision">
                                         <mutation elseif="1"></mutation>
                                         <value name="IF0">
-                                          <block type="logic_operation" id="call_conditions"><field name="OP">AND</field>
+                                          <block type="logic_operation" id="call_middle_outer"><field name="OP">AND</field>
                                             <value name="A">
-                                              <block type="logic_operation" id="call_conditions_left"><field name="OP">AND</field>
+                                              <block type="logic_operation" id="call_conditions"><field name="OP">AND</field>
                                                 <value name="A">
-                                                  <block type="logic_operation" id="call_price_width"><field name="OP">AND</field>
+                                                  <block type="logic_operation" id="call_conditions_left"><field name="OP">AND</field>
                                                     <value name="A">
-                                                      <block type="logic_compare" id="call_tick_upper"><field name="OP">GTE</field>
-                                                        <value name="A"><block type="tick" id="call_tick"></block></value>
+                                                      <block type="logic_operation" id="call_price_width"><field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="call_tick_upper"><field name="OP">GTE</field>
+                                                            <value name="A"><block type="tick" id="call_tick"></block></value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="call_upper_band">
+                                                                <field name="VAR" id="v_bb_upper">upper_band</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
                                                         <value name="B">
-                                                          <block type="variables_get" id="call_upper_band">
-                                                            <field name="VAR" id="v_bb_upper">upper_band</field>
+                                                          <block type="logic_compare" id="call_width_check"><field name="OP">GT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="call_bb_width">
+                                                                <field name="VAR" id="v_bb_width">bb_width</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B"><block type="math_number" id="bb_width_min"><field name="NUM">0.4</field></block></value>
                                                           </block>
                                                         </value>
                                                       </block>
                                                     </value>
                                                     <value name="B">
-                                                      <block type="logic_compare" id="call_width_check"><field name="OP">GT</field>
+                                                      <block type="logic_operation" id="call_rsi_range"><field name="OP">AND</field>
                                                         <value name="A">
-                                                          <block type="variables_get" id="call_bb_width">
-                                                            <field name="VAR" id="v_bb_width">bb_width</field>
+                                                          <block type="logic_compare" id="call_rsi_low"><field name="OP">GT</field>
+                                                            <value name="A"><block type="variables_get" id="call_rsi_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                            <value name="B"><block type="math_number" id="call_rsi_min"><field name="NUM">60</field></block></value>
                                                           </block>
                                                         </value>
-                                                        <value name="B"><block type="math_number" id="bb_width_min"><field name="NUM">0.4</field></block></value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="call_rsi_high"><field name="OP">LT</field>
+                                                            <value name="A"><block type="variables_get" id="call_rsi_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                            <value name="B"><block type="math_number" id="call_rsi_max"><field name="NUM">70</field></block></value>
+                                                          </block>
+                                                        </value>
                                                       </block>
                                                     </value>
                                                   </block>
                                                 </value>
                                                 <value name="B">
-                                                  <block type="logic_operation" id="call_rsi_range"><field name="OP">AND</field>
-                                                    <value name="A">
-                                                      <block type="logic_compare" id="call_rsi_low"><field name="OP">GT</field>
-                                                        <value name="A"><block type="variables_get" id="call_rsi_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                                                        <value name="B"><block type="math_number" id="call_rsi_min"><field name="NUM">60</field></block></value>
-                                                      </block>
-                                                    </value>
-                                                    <value name="B">
-                                                      <block type="logic_compare" id="call_rsi_high"><field name="OP">LT</field>
-                                                        <value name="A"><block type="variables_get" id="call_rsi_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                                                        <value name="B"><block type="math_number" id="call_rsi_max"><field name="NUM">70</field></block></value>
-                                                      </block>
-                                                    </value>
+                                                  <block type="logic_compare" id="call_ema_trend"><field name="OP">GT</field>
+                                                    <value name="A"><block type="variables_get" id="call_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
+                                                    <value name="B"><block type="variables_get" id="call_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
                                                   </block>
                                                 </value>
                                               </block>
                                             </value>
                                             <value name="B">
-                                              <block type="logic_compare" id="call_ema_trend"><field name="OP">GT</field>
-                                                <value name="A"><block type="variables_get" id="call_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
-                                                <value name="B"><block type="variables_get" id="call_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
+                                              <block type="logic_operation" id="call_middle_filter"><field name="OP">AND</field>
+                                                <value name="A">
+                                                  <block type="logic_operation" id="call_middle_filter_01"><field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="call_tick0_gt_mid"><field name="OP">GT</field>
+                                                        <value name="A"><block type="variables_get" id="call_get_tick0"><field name="VAR" id="v_last_tick_0">last_tick_0</field></block></value>
+                                                        <value name="B"><block type="variables_get" id="call_get_mid0"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="call_tick1_gt_mid"><field name="OP">GT</field>
+                                                        <value name="A"><block type="variables_get" id="call_get_tick1"><field name="VAR" id="v_last_tick_1">last_tick_1</field></block></value>
+                                                        <value name="B"><block type="variables_get" id="call_get_mid1"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <value name="B">
+                                                  <block type="logic_compare" id="call_tick2_gt_mid"><field name="OP">GT</field>
+                                                    <value name="A"><block type="variables_get" id="call_get_tick2"><field name="VAR" id="v_last_tick_2">last_tick_2</field></block></value>
+                                                    <value name="B"><block type="variables_get" id="call_get_mid2"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
+                                                  </block>
+                                                </value>
                                               </block>
                                             </value>
                                           </block>
@@ -427,55 +490,85 @@
                                           </block>
                                         </statement>
                                         <value name="IF1">
-                                          <block type="logic_operation" id="put_conditions"><field name="OP">AND</field>
+                                          <block type="logic_operation" id="put_middle_outer"><field name="OP">AND</field>
                                             <value name="A">
-                                              <block type="logic_operation" id="put_conditions_left"><field name="OP">AND</field>
+                                              <block type="logic_operation" id="put_conditions"><field name="OP">AND</field>
                                                 <value name="A">
-                                                  <block type="logic_operation" id="put_price_width"><field name="OP">AND</field>
+                                                  <block type="logic_operation" id="put_conditions_left"><field name="OP">AND</field>
                                                     <value name="A">
-                                                      <block type="logic_compare" id="put_tick_lower"><field name="OP">LTE</field>
-                                                        <value name="A"><block type="tick" id="put_tick"></block></value>
+                                                      <block type="logic_operation" id="put_price_width"><field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="put_tick_lower"><field name="OP">LTE</field>
+                                                            <value name="A"><block type="tick" id="put_tick"></block></value>
+                                                            <value name="B">
+                                                              <block type="variables_get" id="put_lower_band">
+                                                                <field name="VAR" id="v_bb_lower">lower_band</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
                                                         <value name="B">
-                                                          <block type="variables_get" id="put_lower_band">
-                                                            <field name="VAR" id="v_bb_lower">lower_band</field>
+                                                          <block type="logic_compare" id="put_width_check"><field name="OP">GT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="put_bb_width">
+                                                                <field name="VAR" id="v_bb_width">bb_width</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B"><block type="math_number" id="bb_width_min_put"><field name="NUM">0.4</field></block></value>
                                                           </block>
                                                         </value>
                                                       </block>
                                                     </value>
                                                     <value name="B">
-                                                      <block type="logic_compare" id="put_width_check"><field name="OP">GT</field>
+                                                      <block type="logic_operation" id="put_rsi_range"><field name="OP">AND</field>
                                                         <value name="A">
-                                                          <block type="variables_get" id="put_bb_width">
-                                                            <field name="VAR" id="v_bb_width">bb_width</field>
+                                                          <block type="logic_compare" id="put_rsi_high"><field name="OP">LT</field>
+                                                            <value name="A"><block type="variables_get" id="put_rsi_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                            <value name="B"><block type="math_number" id="put_rsi_max"><field name="NUM">40</field></block></value>
                                                           </block>
                                                         </value>
-                                                        <value name="B"><block type="math_number" id="bb_width_min_put"><field name="NUM">0.4</field></block></value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="put_rsi_low"><field name="OP">GT</field>
+                                                            <value name="A"><block type="variables_get" id="put_rsi_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
+                                                            <value name="B"><block type="math_number" id="put_rsi_min"><field name="NUM">30</field></block></value>
+                                                          </block>
+                                                        </value>
                                                       </block>
                                                     </value>
                                                   </block>
                                                 </value>
                                                 <value name="B">
-                                                  <block type="logic_operation" id="put_rsi_range"><field name="OP">AND</field>
-                                                    <value name="A">
-                                                      <block type="logic_compare" id="put_rsi_high"><field name="OP">LT</field>
-                                                        <value name="A"><block type="variables_get" id="put_rsi_val1"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                                                        <value name="B"><block type="math_number" id="put_rsi_max"><field name="NUM">40</field></block></value>
-                                                      </block>
-                                                    </value>
-                                                    <value name="B">
-                                                      <block type="logic_compare" id="put_rsi_low"><field name="OP">GT</field>
-                                                        <value name="A"><block type="variables_get" id="put_rsi_val2"><field name="VAR" id="v_rsi">rsi_value</field></block></value>
-                                                        <value name="B"><block type="math_number" id="put_rsi_min"><field name="NUM">30</field></block></value>
-                                                      </block>
-                                                    </value>
+                                                  <block type="logic_compare" id="put_ema_trend"><field name="OP">LT</field>
+                                                    <value name="A"><block type="variables_get" id="put_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
+                                                    <value name="B"><block type="variables_get" id="put_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
                                                   </block>
                                                 </value>
                                               </block>
                                             </value>
                                             <value name="B">
-                                              <block type="logic_compare" id="put_ema_trend"><field name="OP">LT</field>
-                                                <value name="A"><block type="variables_get" id="put_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
-                                                <value name="B"><block type="variables_get" id="put_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
+                                              <block type="logic_operation" id="put_middle_filter"><field name="OP">AND</field>
+                                                <value name="A">
+                                                  <block type="logic_operation" id="put_middle_filter_01"><field name="OP">AND</field>
+                                                    <value name="A">
+                                                      <block type="logic_compare" id="put_tick0_lt_mid"><field name="OP">LT</field>
+                                                        <value name="A"><block type="variables_get" id="put_get_tick0"><field name="VAR" id="v_last_tick_0">last_tick_0</field></block></value>
+                                                        <value name="B"><block type="variables_get" id="put_get_mid0"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="B">
+                                                      <block type="logic_compare" id="put_tick1_lt_mid"><field name="OP">LT</field>
+                                                        <value name="A"><block type="variables_get" id="put_get_tick1"><field name="VAR" id="v_last_tick_1">last_tick_1</field></block></value>
+                                                        <value name="B"><block type="variables_get" id="put_get_mid1"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <value name="B">
+                                                  <block type="logic_compare" id="put_tick2_lt_mid"><field name="OP">LT</field>
+                                                    <value name="A"><block type="variables_get" id="put_get_tick2"><field name="VAR" id="v_last_tick_2">last_tick_2</field></block></value>
+                                                    <value name="B"><block type="variables_get" id="put_get_mid2"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
+                                                  </block>
+                                                </value>
                                               </block>
                                             </value>
                                           </block>
@@ -494,6 +587,12 @@
                                             </statement>
                                           </block>
                                         </statement>
+                                      </block>
+                                                </next>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
                                       </block>
                                     </next>
                                   </block>
