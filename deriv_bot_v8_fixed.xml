@@ -553,29 +553,9 @@
                                               </block>
                                             </value>
                                             <value name="B">
-                                              <block type="logic_operation" id="call_middle_filter"><field name="OP">AND</field>
-                                                <value name="A">
-                                                  <block type="logic_operation" id="call_middle_filter_01"><field name="OP">AND</field>
-                                                    <value name="A">
-                                                      <block type="logic_compare" id="call_tick0_gt_mid"><field name="OP">GT</field>
-                                                        <value name="A"><block type="variables_get" id="call_get_tick0"><field name="VAR" id="v_last_tick_0">last_tick_0</field></block></value>
-                                                        <value name="B"><block type="variables_get" id="call_get_mid0"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
-                                                      </block>
-                                                    </value>
-                                                    <value name="B">
-                                                      <block type="logic_compare" id="call_tick1_gt_mid"><field name="OP">GT</field>
-                                                        <value name="A"><block type="variables_get" id="call_get_tick1"><field name="VAR" id="v_last_tick_1">last_tick_1</field></block></value>
-                                                        <value name="B"><block type="variables_get" id="call_get_mid1"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
-                                                      </block>
-                                                    </value>
-                                                  </block>
-                                                </value>
-                                                <value name="B">
-                                                  <block type="logic_compare" id="call_tick2_gt_mid"><field name="OP">GT</field>
-                                                    <value name="A"><block type="variables_get" id="call_get_tick2"><field name="VAR" id="v_last_tick_2">last_tick_2</field></block></value>
-                                                    <value name="B"><block type="variables_get" id="call_get_mid2"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
-                                                  </block>
-                                                </value>
+                                              <block type="logic_compare" id="call_ema_direction_align"><field name="OP">GT</field>
+                                                <value name="A"><block type="variables_get" id="call_align_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
+                                                <value name="B"><block type="variables_get" id="call_align_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
                                               </block>
                                             </value>
                                           </block>
@@ -665,29 +645,9 @@
                                               </block>
                                             </value>
                                             <value name="B">
-                                              <block type="logic_operation" id="put_middle_filter"><field name="OP">AND</field>
-                                                <value name="A">
-                                                  <block type="logic_operation" id="put_middle_filter_01"><field name="OP">AND</field>
-                                                    <value name="A">
-                                                      <block type="logic_compare" id="put_tick0_lt_mid"><field name="OP">LT</field>
-                                                        <value name="A"><block type="variables_get" id="put_get_tick0"><field name="VAR" id="v_last_tick_0">last_tick_0</field></block></value>
-                                                        <value name="B"><block type="variables_get" id="put_get_mid0"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
-                                                      </block>
-                                                    </value>
-                                                    <value name="B">
-                                                      <block type="logic_compare" id="put_tick1_lt_mid"><field name="OP">LT</field>
-                                                        <value name="A"><block type="variables_get" id="put_get_tick1"><field name="VAR" id="v_last_tick_1">last_tick_1</field></block></value>
-                                                        <value name="B"><block type="variables_get" id="put_get_mid1"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
-                                                      </block>
-                                                    </value>
-                                                  </block>
-                                                </value>
-                                                <value name="B">
-                                                  <block type="logic_compare" id="put_tick2_lt_mid"><field name="OP">LT</field>
-                                                    <value name="A"><block type="variables_get" id="put_get_tick2"><field name="VAR" id="v_last_tick_2">last_tick_2</field></block></value>
-                                                    <value name="B"><block type="variables_get" id="put_get_mid2"><field name="VAR" id="v_bb_middle">middle_band</field></block></value>
-                                                  </block>
-                                                </value>
+                                              <block type="logic_compare" id="put_ema_direction_align"><field name="OP">LT</field>
+                                                <value name="A"><block type="variables_get" id="put_align_ema_fast"><field name="VAR" id="v_ema_fast">ema_fast</field></block></value>
+                                                <value name="B"><block type="variables_get" id="put_align_ema_slow"><field name="VAR" id="v_ema_slow">ema_slow</field></block></value>
                                               </block>
                                             </value>
                                           </block>
