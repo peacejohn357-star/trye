@@ -15,6 +15,8 @@
     <variable id="v_last_tick_0">last_tick_0</variable>
     <variable id="v_last_tick_1">last_tick_1</variable>
     <variable id="v_last_tick_2">last_tick_2</variable>
+    <variable id="v_bb_squeeze_ratio">bb_squeeze_ratio</variable>
+    <variable id="v_candle_range">candle_range</variable>
   </variables>
 
   <!-- ============================================ -->
@@ -308,6 +310,65 @@
                           </block>
                         </value>
                         <next>
+                          <!-- ============================================ -->
+                          <!-- TIER 1 VOLATILITY FILTER CALCULATIONS        -->
+                          <!-- bb_squeeze_ratio = bb_width / middle_band    -->
+                          <!--   < 0.01 (1%) = tight bands = calm market    -->
+                          <!--   > 0.01 (1%) = wide bands = volatile market -->
+                          <!-- middle_band is an EMA of STP100 price, which -->
+                          <!-- is always a positive value, so no div-by-zero -->
+                          <!-- candle_range = high - low of current 1m bar  -->
+                          <!--   < 1.5 points = small steps = safe to trade -->
+                          <!--   > 1.5 points = large jumps = skip          -->
+                          <!-- ============================================ -->
+                          <block type="variables_set" id="set_bb_squeeze_ratio">
+                            <field name="VAR" id="v_bb_squeeze_ratio">bb_squeeze_ratio</field>
+                            <value name="VALUE">
+                              <block type="math_arithmetic" id="bb_squeeze_calc">
+                                <field name="OP">DIVIDE</field>
+                                <value name="A">
+                                  <block type="variables_get" id="squeeze_bb_width">
+                                    <field name="VAR" id="v_bb_width">bb_width</field>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <block type="variables_get" id="squeeze_middle_band">
+                                    <field name="VAR" id="v_bb_middle">middle_band</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="set_candle_range">
+                                <field name="VAR" id="v_candle_range">candle_range</field>
+                                <value name="VALUE">
+                                  <block type="math_arithmetic" id="candle_range_calc">
+                                    <field name="OP">MINUS</field>
+                                    <value name="A">
+                                      <block type="ohlc" id="get_candle_high">
+                                        <field name="OHLCFIELD_LIST">high</field>
+                                        <value name="CANDLEINTERVAL">
+                                          <shadow type="math_number" id="candle_high_interval"><field name="NUM">60</field></shadow>
+                                        </value>
+                                        <value name="OFFSET">
+                                          <shadow type="math_number" id="candle_high_offset"><field name="NUM">0</field></shadow>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <value name="B">
+                                      <block type="ohlc" id="get_candle_low">
+                                        <field name="OHLCFIELD_LIST">low</field>
+                                        <value name="CANDLEINTERVAL">
+                                          <shadow type="math_number" id="candle_low_interval"><field name="NUM">60</field></shadow>
+                                        </value>
+                                        <value name="OFFSET">
+                                          <shadow type="math_number" id="candle_low_offset"><field name="NUM">0</field></shadow>
+                                        </value>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </value>
+                                <next>
                           <block type="rsi_statement" id="set_rsi">
                             <field name="VARIABLE" id="v_rsi">rsi_value</field>
                             <statement name="STATEMENT">
@@ -389,6 +450,47 @@
                                                   </block>
                                                 </value>
                                                 <next>
+                                                  <!-- ============================================ -->
+                                                  <!-- TIER 1 VOLATILITY GATE                       -->
+                                                  <!-- Condition A: bb_squeeze_ratio < 0.01         -->
+                                                  <!--   (BB width < 1% of middle band = calm)      -->
+                                                  <!-- Condition B: candle_range < 1.5 points       -->
+                                                  <!--   (small step moves = predictable trend)     -->
+                                                  <!-- Both must be true to proceed with trading    -->
+                                                  <!-- ============================================ -->
+                                                  <block type="controls_if" id="volatility_gate">
+                                                    <value name="IF0">
+                                                      <block type="logic_operation" id="volatility_gate_and">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_compare" id="squeeze_check">
+                                                            <field name="OP">LT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="gate_squeeze_val">
+                                                                <field name="VAR" id="v_bb_squeeze_ratio">bb_squeeze_ratio</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="squeeze_threshold"><field name="NUM">0.01</field></block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_compare" id="range_check">
+                                                            <field name="OP">LT</field>
+                                                            <value name="A">
+                                                              <block type="variables_get" id="gate_range_val">
+                                                                <field name="VAR" id="v_candle_range">candle_range</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="math_number" id="range_threshold"><field name="NUM">1.5</field></block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <statement name="DO0">
                                                   <block type="controls_if" id="entry_decision">
                                         <mutation elseif="1"></mutation>
                                         <value name="IF0">
@@ -588,6 +690,8 @@
                                           </block>
                                         </statement>
                                       </block>
+                                                    </statement>
+                                                  </block>
                                                 </next>
                                               </block>
                                             </next>
@@ -596,6 +700,10 @@
                                       </block>
                                     </next>
                                   </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
                                 </next>
                               </block>
                             </next>
