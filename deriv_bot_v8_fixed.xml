@@ -108,7 +108,7 @@
     <statement name="SUBMARKET">
       <block type="trade_definition_tradeoptions" id="trade_opts">
         <mutation has_first_barrier="false" has_second_barrier="false" has_prediction="false"></mutation>
-        <field name="DURATIONTYPE_LIST">t</field>
+        <field name="DURATIONTYPE_LIST">s</field>
         <field name="CURRENCY_LIST">USD</field>
         <value name="DURATION">
           <shadow type="math_number_positive" id="dur_val"><field name="NUM">5</field></shadow>
